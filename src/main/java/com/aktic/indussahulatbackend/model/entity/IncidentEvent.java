@@ -24,6 +24,9 @@ public class IncidentEvent {
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "hospital_id", nullable = false, updatable = false)
+    private Hospital hospital;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false, updatable = false)
@@ -34,12 +37,9 @@ public class IncidentEvent {
     @JoinColumn(name = "ambulance_provider_id", nullable = false, updatable = false)
     private AmbulanceProvider ambulanceProvider;
 
-
-
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "ambulance_id", nullable = false, updatable = false)
     private Ambulance ambulance;
-
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "ambulance_driver_id", nullable = false, updatable = false)
