@@ -1,0 +1,9 @@
+info:
+  application:
+    name: Indus Sahulat
+    description: Ambulance Service for Indus Hospital
+    author: Azizullah Khan
+    version: '@project.version@'
+spring:
+  profiles:
+    active: dev

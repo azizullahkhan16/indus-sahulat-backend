@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: Indus-sahulat-backend
+  jackson:
+    time-zone: UTC
+  datasource:
+    url: jdbc:postgresql://localhost:5432/Indus-Sahulat
+    username: postgres
+    password: 123456789
+    driver-class-name: org.postgresql.Driver
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: info
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY}
+
