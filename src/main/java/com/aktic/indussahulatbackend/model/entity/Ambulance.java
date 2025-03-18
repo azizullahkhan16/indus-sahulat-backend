@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.model.entity;
 
+import com.aktic.indussahulatbackend.model.enums.AmbulanceType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +37,9 @@ public class Ambulance {
 
     @Column(name = "license_plate", nullable = false, unique = true)
     private String licensePlate;
+
+    @Column(name = "ambulance_type", nullable = false)
+    private AmbulanceType ambulanceType;
 
     @Column(name = "color", nullable = false)
     private String color;
