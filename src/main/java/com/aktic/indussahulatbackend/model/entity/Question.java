@@ -13,7 +13,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "patients")
+@Table(name = "questions")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Question {
