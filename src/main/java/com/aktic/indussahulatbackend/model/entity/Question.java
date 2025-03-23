@@ -13,7 +13,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "patients")
+@Table(name = "questions")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Question {
@@ -33,4 +33,7 @@ public class Question {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "options", nullable = false)
+    private String options;
 }
