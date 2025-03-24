@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -18,6 +20,7 @@ import java.time.Instant;
 @EntityListeners(AuditingEntityListener.class)
 public class Question {
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
@@ -34,6 +37,8 @@ public class Question {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @Column(name = "options", nullable = false)
-    private String options;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "question_id", nullable = false)
+    private List<Option> options = new ArrayList<>();
 }

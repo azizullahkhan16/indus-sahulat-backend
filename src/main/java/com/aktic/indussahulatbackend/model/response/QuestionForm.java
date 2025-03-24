@@ -1,9 +1,12 @@
 package com.aktic.indussahulatbackend.model.response;
-
 import lombok.Data;
 
+import java.util.List;
+
 @Data
-public class FormResponse {
+public class QuestionForm {
+    Long questionId;
     String Question;
-    String options;
+    List<String> options;
+
 }
