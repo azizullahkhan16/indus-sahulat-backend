@@ -9,6 +9,7 @@ import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.question.QuestionRepository;
+import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,8 @@ public class AmbulanceService
     private PatientRepository patientRepository;
     @Autowired
     private QuestionRepository questionRepository;
+    @Autowired
+    private ResponseRepository responseRepository;
 
     public AmbulanceType determineCategory(FormRequest formRequest)
     {
@@ -49,7 +52,7 @@ public class AmbulanceService
         for (FormRequest.Answer answer: answers)
         {
             Long patientId = 1L;
-//            Patient patient = patientRepository.findById(patientId).orElseThrow(()-> new PatientNotFoundException(PatientNotFoundException.DEFAULT_MESSAGE));
+            Patient patient = patientRepository.findById(patientId).orElseThrow(()-> new PatientNotFoundException(PatientNotFoundException.DEFAULT_MESSAGE));
             Long questionId = answer.getQuestionId();
             Question question = questionRepository.findById(questionId)
                     .orElseThrow(() -> new QuestionNotFoundException(QuestionNotFoundException.DEFAULT_MESSAGE));
@@ -58,7 +61,12 @@ public class AmbulanceService
                     .map(Option::getOptionText)
                     .toList();
             List<String> response = answer.getResponses();
-
+            Response r = Response.builder()
+                        .patient(patient)
+                        .question(question)
+                        .response("response")
+                        .build();
+            responseRepository.save(r);
             for (String res : response)
             {
                 if (options.contains(res))
