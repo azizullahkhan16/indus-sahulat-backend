@@ -23,6 +23,4 @@ public class Option {
     @Column(name = "option_text", nullable = false)
     private String optionText;
 
-
-
 }

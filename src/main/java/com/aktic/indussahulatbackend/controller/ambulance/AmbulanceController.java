@@ -27,7 +27,6 @@ public class AmbulanceController
     {
         List<AmbulanceDTO> ambulanceList = ambulanceService.getAvailableAmbulances(formRequest);
         ApiResponse<List<AmbulanceDTO>> apiResponse = new ApiResponse<>(true,"Ambulances fetched successfully",ambulanceList);
-        System.out.println("This is my API response" + apiResponse);
         return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 }
