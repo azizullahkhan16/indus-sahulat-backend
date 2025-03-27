@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/Indus-Sahulat
     username: postgres
-    password: postgres
+    password: 123456789
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
