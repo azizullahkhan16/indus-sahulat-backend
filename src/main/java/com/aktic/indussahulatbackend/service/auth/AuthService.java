@@ -1,17 +1,22 @@
 package com.aktic.indussahulatbackend.service.auth;
 
+import com.aktic.indussahulatbackend.model.common.UserBase;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.request.AmbulanceDriverRegisterRequest;
 import com.aktic.indussahulatbackend.model.request.AmbulanceProviderRegisterRequest;
 import com.aktic.indussahulatbackend.model.request.AuthenticationRequest;
 import com.aktic.indussahulatbackend.model.request.PatientRegisterRequest;
 import com.aktic.indussahulatbackend.model.response.AuthenticationResponse;
-import com.aktic.indussahulatbackend.model.response.UserInfo;
+import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverInfo;
+import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderInfo;
+import com.aktic.indussahulatbackend.model.response.actor.PatientInfo;
+import com.aktic.indussahulatbackend.model.response.actor.UserInfo;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProviderRepository;
 import com.aktic.indussahulatbackend.repository.company.CompanyRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.role.RoleRepository;
+import com.aktic.indussahulatbackend.security.UserPrincipal;
 import com.aktic.indussahulatbackend.service.jwt.JwtService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
@@ -23,8 +28,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -43,6 +50,7 @@ public class AuthService {
     private final CompanyRepository companyRepository;
     private final AmbulanceDriverRepository ambulanceDriverRepository;
 
+    @Transactional
     public ResponseEntity<ApiResponse<String>> patientRegister(PatientRegisterRequest request) {
         try{
             // check if the patient already exists with the given phone
@@ -82,6 +90,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<AuthenticationResponse>> patientLogin(AuthenticationRequest request) {
         try{
             Optional<Patient> optionalPatient = patientRepository.findByPhone(request.getPhone());
@@ -104,10 +113,8 @@ public class AuthService {
             }
 
             String token = jwtService.generateToken(patient.getPhone());
-            UserInfo userInfo = new UserInfo(patient);
-
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
-                    new AuthenticationResponse(userInfo, token)));
+                    new AuthenticationResponse(new PatientInfo(patient), token)));
 
 
         }catch (Exception e) {
@@ -116,6 +123,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<String>> ambulanceProviderRegister(@Valid AmbulanceProviderRegisterRequest request) {
         try{
             // check if the ambulance provider already exists with the given phone
@@ -158,6 +166,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<AuthenticationResponse>> ambulanceProviderLogin(@Valid AuthenticationRequest request) {
         try{
             Optional<AmbulanceProvider> optionalAmbulanceProvider = ambulanceProviderRepository.findByPhone(request.getPhone());
@@ -180,10 +189,8 @@ public class AuthService {
             }
 
             String token = jwtService.generateToken(ambulanceProvider.getPhone());
-            UserInfo userInfo = new UserInfo(ambulanceProvider);
-
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
-                    new AuthenticationResponse(userInfo, token)));
+                    new AuthenticationResponse(new AmbulanceProviderInfo(ambulanceProvider), token)));
 
         }catch (Exception e) {
             log.error("Error occurred while logging in", e);
@@ -191,6 +198,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<String>> ambulanceDriverRegister(@Valid AmbulanceDriverRegisterRequest request) {
         try{
             // check if the ambulance drvier already exists with the given phone
@@ -232,6 +240,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<AuthenticationResponse>> ambulanceDriverLogin(@Valid AuthenticationRequest request) {
         try{
             Optional<AmbulanceDriver> optionalAmbulanceDriver = ambulanceDriverRepository.findByPhone(request.getPhone());
@@ -254,14 +263,23 @@ public class AuthService {
             }
 
             String token = jwtService.generateToken(ambulanceDriver.getPhone());
-            UserInfo userInfo = new UserInfo(ambulanceDriver);
 
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
-                    new AuthenticationResponse(userInfo, token)));
+                    new AuthenticationResponse(new AmbulanceDriverInfo(ambulanceDriver), token)));
 
         }catch (Exception e) {
             log.error("Error occurred while logging in", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Error", null));
+        }
+    }
+
+    public UserBase getCurrentUser() {
+        try {
+            UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            return userPrincipal.getUser();
+        } catch (Exception e) {
+            log.error("Error occurred while getting current user", e);
+            return null;
         }
     }
 }

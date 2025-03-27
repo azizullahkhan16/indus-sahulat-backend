@@ -1,4 +1,4 @@
-package com.aktic.indussahulatbackend.model.response;
+package com.aktic.indussahulatbackend.model.response.actor;
 
 import com.aktic.indussahulatbackend.model.common.UserBase;
 import lombok.AllArgsConstructor;
@@ -22,6 +22,8 @@ public class UserInfo {
     private Instant createdAt;
     private Instant updatedAt;
     private String role;
+    private String image;
+    private Integer age;
 
     public UserInfo(UserBase user) {
         this.id = user.getId();
@@ -34,5 +36,8 @@ public class UserInfo {
         this.createdAt = user.getCreatedAt();
         this.updatedAt = user.getUpdatedAt();
         this.role = user.getRole().getRoleName();
+        this.image = user.getImage();
+        this.age = user.getAge();
+
     }
 }

@@ -16,4 +16,6 @@ public interface UserBase {
     Role getRole();
     Instant getCreatedAt();
     Instant getUpdatedAt();
+    String getImage();
+    Integer getAge();
 }

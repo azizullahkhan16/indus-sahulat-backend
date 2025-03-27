@@ -47,10 +47,10 @@ public class Patient implements UserBase {
     private String phone;
 
     @Column(name = "weight", nullable = false)
-    private float weight;
+    private Float weight;
 
     @Column(name = "height", nullable = false)
-    private float height;
+    private Float height;
 
     @Column(name = "blood_type", nullable = false)
     @Enumerated(EnumType.STRING)

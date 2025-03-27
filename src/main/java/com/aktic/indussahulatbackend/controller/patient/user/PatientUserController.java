@@ -1,7 +1,7 @@
 package com.aktic.indussahulatbackend.controller.patient.user;
 
 
-import com.aktic.indussahulatbackend.model.response.UserInfo;
+import com.aktic.indussahulatbackend.model.response.actor.PatientInfo;
 import com.aktic.indussahulatbackend.service.user.UserService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/patient/user")
+@RequestMapping("/api/patient")
 @RequiredArgsConstructor
 public class PatientUserController {
 
     private final UserService userService;
 
     @GetMapping("/get-user")
-    public ResponseEntity<ApiResponse<UserInfo>> getUserInfo() {
-        return userService.getUserInfo();
+    public ResponseEntity<ApiResponse<PatientInfo>> getPatientInfo() {
+        return userService.getPatientInfo();
     }
 }
