@@ -1,6 +1,8 @@
 package com.aktic.indussahulatbackend.exception;
 
+import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceNotFoundException;
 import com.aktic.indussahulatbackend.exception.customexceptions.PatientNotFoundException;
+import com.aktic.indussahulatbackend.exception.customexceptions.QuestionNotFoundException;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.ErrorResponse;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handlePatientNotFoundException(PatientNotFoundException ex) {
         return new ResponseEntity<>(new ErrorResponse(ex.getMessage(),false), HttpStatus.NOT_FOUND);
     }
+    @ExceptionHandler(QuestionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleQuestionNotFoundException(QuestionNotFoundException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage(), false), HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(AmbulanceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAmbulanceNotFoundException(AmbulanceNotFoundException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage(), false), HttpStatus.NOT_FOUND);
+    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -33,7 +44,6 @@ public class GlobalExceptionHandler {
                 String fieldName = fieldError.getField();
                 String errorMessage = fieldError.getDefaultMessage();
                 errors.put(fieldName, errorMessage);
-                System.out.println("Field: " + fieldName + ", Error: " + errorMessage); // Debugging log
             }
         });
 

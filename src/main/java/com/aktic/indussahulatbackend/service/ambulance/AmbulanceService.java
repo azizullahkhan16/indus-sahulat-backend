@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.service.ambulance;
 
+import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceNotFoundException;
 import com.aktic.indussahulatbackend.exception.customexceptions.PatientNotFoundException;
 import com.aktic.indussahulatbackend.exception.customexceptions.QuestionNotFoundException;
 import com.aktic.indussahulatbackend.model.entity.*;
@@ -29,16 +30,14 @@ public class AmbulanceService
     @Autowired
     private ResponseRepository responseRepository;
 
-    public AmbulanceType determineCategory(FormRequest formRequest)
-    {
+    public AmbulanceType determineCategory(FormRequest formRequest) {
         boolean isUnconscious = false;
         boolean hasChestPain = false;
-        boolean hasSevreBleeding = false;
-        boolean hasbreathingIssue = false;
-        boolean hasDiabetes =false;
+        boolean hasSevereBleeding = false;
+        boolean hasBreathingIssue = false;
+        boolean hasDiabetes = false;
         boolean hasHeartDisease = false;
         boolean hasCancer = false;
-        boolean hasAllergies = false;
         boolean hasAccident = false;
         boolean hadHeartAttack = false;
         boolean hadStrokeInjury = false;
@@ -46,92 +45,67 @@ public class AmbulanceService
         boolean isNeonatal = false;
         boolean needOxygenSupply = false;
 
-
         List<FormRequest.Answer> answers = formRequest.getAnswerList();
+        Long patientId = 1L;
 
-        for (FormRequest.Answer answer: answers)
-        {
-            Long patientId = 1L;
-            Patient patient = patientRepository.findById(patientId).orElseThrow(()-> new PatientNotFoundException(PatientNotFoundException.DEFAULT_MESSAGE));
-            Long questionId = answer.getQuestionId();
-            Question question = questionRepository.findById(questionId)
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new PatientNotFoundException(PatientNotFoundException.DEFAULT_MESSAGE));
+
+        for (FormRequest.Answer answer : answers) {
+            Question question = questionRepository.findById(answer.getQuestionId())
                     .orElseThrow(() -> new QuestionNotFoundException(QuestionNotFoundException.DEFAULT_MESSAGE));
-            List<Option> availableOptions = question.getOptions();
-            List<String> options = availableOptions.stream()
+
+            List<String> availableOptions = question.getOptions().stream()
                     .map(Option::getOptionText)
                     .toList();
-            List<String> response = answer.getResponses();
-            Response r = Response.builder()
-                        .patient(patient)
-                        .question(question)
-                        .response("response")
-                        .build();
-            responseRepository.save(r);
-            for (String res : response)
-            {
-                if (options.contains(res))
-                {
-                    switch (res)
-                    {
-                        case "Unresponsive":
-                            isUnconscious = true;
-                            break;
-                        case "Chest Pain":
-                            hasChestPain = true;
-                            break;
-                        case "Severe Bleeding":
-                            hasSevreBleeding = true;
-                            break;
-                        case "Difficulty Breathing":
-                            hasbreathingIssue = true;
-                            break;
-                        case "Diabetes":
-                            hasDiabetes = true;
-                            break;
-                        case "Heart Disease":
-                            hasHeartDisease = true;
-                            break;
-                        case "Cancer":
-                            hasCancer = true;
-                            break;
-                        case "Accident":
-                            hasAccident = true;
-                            break;
-                        case "Heart Attack":
-                            hadHeartAttack = true;
-                            break;
-                        case "Storke Injury":
-                            hadStrokeInjury = true;
-                            break;
-                        case "Neonatal":
-                            isNeonatal = true;
-                            break;
-                        case "Trauma Care":
-                            hasTrauma = true;
-                            break;
-                        case "Oxygen Supply":
-                            needOxygenSupply = true;
-                            break;
-                        case "Other":
-                            System.out.println("Other symptoms.");
-                            break;
-                        default:
-                            System.out.println("Unknown response: " + response);
+
+            responseRepository.save(Response.builder()
+                    .patient(patient)
+                    .question(question)
+                    .response("response")
+                    .build());
+
+            for (String res : answer.getResponses()) {
+                if (availableOptions.contains(res)) {
+                    switch (res) {
+                        case "Unresponsive" -> isUnconscious = true;
+                        case "Chest Pain" -> hasChestPain = true;
+                        case "Severe Bleeding" -> hasSevereBleeding = true;
+                        case "Difficulty Breathing" -> hasBreathingIssue = true;
+                        case "Diabetes" -> hasDiabetes = true;
+                        case "Heart Disease" -> hasHeartDisease = true;
+                        case "Cancer" -> hasCancer = true;
+                        case "Accident" -> hasAccident = true;
+                        case "Heart Attack" -> hadHeartAttack = true;
+                        case "Stroke Injury" -> hadStrokeInjury = true;
+                        case "Neonatal" -> isNeonatal = true;
+                        case "Trauma Care" -> hasTrauma = true;
+                        case "Oxygen Supply" -> needOxygenSupply = true;
+                        case "Other" -> System.out.println("Other symptoms.");
+                        default -> System.out.println("Unknown response: " + res);
                     }
                 }
             }
         }
-        if (isUnconscious || hasChestPain || hasbreathingIssue || hasSevreBleeding) {
-            return AmbulanceType.ADVANCED;
-        } else {
-            return AmbulanceType.NORMAL;
-        }
+
+        return (isUnconscious || hasChestPain || hasBreathingIssue || hasSevereBleeding) ?
+                AmbulanceType.ADVANCED : AmbulanceType.NORMAL;
     }
 
-    public List<AmbulanceDTO> getAvailableAmbulances(FormRequest formRequest)
-    {
+    public List<AmbulanceDTO> getAvailableAmbulances(FormRequest formRequest) {
+//        if (formRequest == null || formRequest.getAnswerList() == null || formRequest.getAnswerList().isEmpty()) {
+//            throw new InvalidFormRequestException("FormRequest cannot be null or empty");
+//        }
         AmbulanceType category = determineCategory(formRequest);
+//        if (category == null) {
+//            throw new InvalidFormRequestException("Could not determine category from formRequest");
+//        }
         List<Ambulance> ambulanceList = ambulanceRepository.findByAmbulanceType(category);
+
+
+        if (ambulanceList == null || ambulanceList.isEmpty()) {
+            throw new AmbulanceNotFoundException("No available ambulances found for the given category.");
+        }
 
         return ambulanceList.stream().map(
                 ambulance -> new AmbulanceDTO(
@@ -147,4 +121,5 @@ public class AmbulanceService
                 )
         ).collect(Collectors.toList());
     }
+
 }
