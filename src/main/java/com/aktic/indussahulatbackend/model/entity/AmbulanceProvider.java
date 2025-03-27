@@ -24,7 +24,7 @@ public class AmbulanceProvider {
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "company_id", nullable = false, updatable = false)
     private Company company;
 

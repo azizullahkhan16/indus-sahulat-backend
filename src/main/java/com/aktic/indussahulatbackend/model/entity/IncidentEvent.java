@@ -22,27 +22,28 @@ import java.time.Instant;
 public class IncidentEvent {
     @Id
     @Column(name = "id", nullable = false, updatable = false, unique = true)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "hospital_id", nullable = false, updatable = false)
+    @JoinColumn(name = "hospital_id", nullable = true, updatable = false)
     private Hospital hospital;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "patient_id", nullable = false, updatable = false)
+    @JoinColumn(name = "patient_id", nullable = true, updatable = false)
     private Patient patient;
 
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_provider_id", nullable = false, updatable = false)
+    @JoinColumn(name = "ambulance_provider_id", nullable = true, updatable = false)
     private AmbulanceProvider ambulanceProvider;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_id", nullable = false, updatable = false)
+    @JoinColumn(name = "ambulance_id", nullable = true, updatable = false)
     private Ambulance ambulance;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_driver_id", nullable = false, updatable = false)
+    @JoinColumn(name = "ambulance_driver_id", nullable = true, updatable = false)
     private AmbulanceDriver ambulanceDriver;
 
     @Embedded
@@ -73,4 +74,15 @@ public class IncidentEvent {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @PrePersist
+    protected void onCreate() {
+        Instant now = Instant.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }

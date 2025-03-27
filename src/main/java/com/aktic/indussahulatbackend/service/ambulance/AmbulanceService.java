@@ -33,7 +33,7 @@ public class AmbulanceService
     {
         boolean isUnconscious = false;
         boolean hasChestPain = false;
-        boolean hasSevreBleeding = false;
+        boolean hasSevereBleeding = false;
         boolean hasbreathingIssue = false;
         boolean hasDiabetes =false;
         boolean hasHeartDisease = false;
@@ -61,16 +61,16 @@ public class AmbulanceService
                     .map(Option::getOptionText)
                     .toList();
             List<String> response = answer.getResponses();
-            Response r = Response.builder()
-                        .patient(patient)
-                        .question(question)
-                        .response("response")
-                        .build();
-            responseRepository.save(r);
             for (String res : response)
             {
                 if (options.contains(res))
                 {
+                    Response r = Response.builder()
+                            .patient(patient)
+                            .question(question)
+                            .response(res)
+                            .build();
+                    responseRepository.save(r);
                     switch (res)
                     {
                         case "Unresponsive":
@@ -80,7 +80,7 @@ public class AmbulanceService
                             hasChestPain = true;
                             break;
                         case "Severe Bleeding":
-                            hasSevreBleeding = true;
+                            hasSevereBleeding = true;
                             break;
                         case "Difficulty Breathing":
                             hasbreathingIssue = true;
@@ -121,7 +121,7 @@ public class AmbulanceService
                 }
             }
         }
-        if (isUnconscious || hasChestPain || hasbreathingIssue || hasSevreBleeding) {
+        if (isUnconscious || hasChestPain || hasbreathingIssue || hasSevereBleeding) {
             return AmbulanceType.ADVANCED;
         } else {
             return AmbulanceType.NORMAL;

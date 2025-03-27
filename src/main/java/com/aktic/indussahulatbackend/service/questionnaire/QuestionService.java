@@ -4,7 +4,7 @@ import com.aktic.indussahulatbackend.model.response.QuestionForm;
 
 import java.util.List;
 
-public interface QuestionService {
-
+public interface QuestionService
+{
     List<QuestionForm> getAllQuestions();
 }
