@@ -70,4 +70,9 @@ public class AmbulanceDriver implements UserBase {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.isVerified = this.isVerified != null && this.isVerified;
+    }
 }

@@ -1,6 +1,8 @@
 package com.aktic.indussahulatbackend.config;
 
+import com.aktic.indussahulatbackend.model.entity.Company;
 import com.aktic.indussahulatbackend.model.entity.Role;
+import com.aktic.indussahulatbackend.repository.company.CompanyRepository;
 import com.aktic.indussahulatbackend.repository.role.RoleRepository;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 public class DataInitializerConfig {
     private final SnowflakeIdGenerator snowflakeIdGenerator;
     private final RoleRepository roleRepository;
+    private final CompanyRepository companyRepository;
 
     @Bean
     CommandLineRunner insertRoles() {
@@ -53,6 +56,43 @@ public class DataInitializerConfig {
                 }
             } catch (Exception e) {
                 log.error("Error inserting roles: " + e.getMessage());
+            }
+        };
+    }
+
+
+    @Bean
+    CommandLineRunner insertCompanies() {
+        return args -> {
+            try {
+                if (!companyRepository.existsByName("Indus Healthcare")) {
+                    Company company1 = Company.builder()
+                            .id(snowflakeIdGenerator.nextId())
+                            .name("Indus Healthcare")
+                            .phone("+92 21 12345678")
+                            .email("contact@indushealthcare.com")
+                            .website("https://www.indushealthcare.com")
+                            .description("A leading healthcare provider in Pakistan.")
+                            .build();
+                    companyRepository.save(company1);
+                    log.info("Company 'Indus Healthcare' inserted successfully.");
+                }
+
+                if (!companyRepository.existsByName("Rescue 1122")) {
+                    Company company2 = Company.builder()
+                            .id(snowflakeIdGenerator.nextId())
+                            .name("Rescue 1122")
+                            .phone("+92 42 98765432")
+                            .email("info@rescue1122.pk")
+                            .website("https://www.rescue1122.pk")
+                            .description("Pakistan's premier emergency ambulance service.")
+                            .build();
+
+                    companyRepository.save(company2);
+                    log.info("Company 'Rescue 1122' inserted successfully.");
+                }
+            } catch (Exception e) {
+                log.error("Error inserting companies: " + e.getMessage());
             }
         };
     }

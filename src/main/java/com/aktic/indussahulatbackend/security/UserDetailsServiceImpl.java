@@ -21,10 +21,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final PatientRepository patientRepository;
 
-    private AmbulanceDriverRepository driverRepository;
+    private final AmbulanceDriverRepository driverRepository;
 
-    @Autowired
-    private AmbulanceProviderRepository providerRepository;
+    private final AmbulanceProviderRepository providerRepository;
 
     @Override
     public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {

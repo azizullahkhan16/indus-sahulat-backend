@@ -1,7 +1,8 @@
-package com.aktic.indussahulatbackend.controller.auth;
+package com.aktic.indussahulatbackend.controller.ambulanceDriver.auth;
 
+
+import com.aktic.indussahulatbackend.model.request.AmbulanceDriverRegisterRequest;
 import com.aktic.indussahulatbackend.model.request.AuthenticationRequest;
-import com.aktic.indussahulatbackend.model.request.PatientRegisterRequest;
 import com.aktic.indussahulatbackend.model.response.AuthenticationResponse;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
@@ -14,23 +15,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/ambulance-driver")
 @RequiredArgsConstructor
-public class AuthController {
+public class AmbulanceDriverAuthController {
 
     private final AuthService service;
 
-    @PostMapping(value = "/patient/register")
-    public ResponseEntity<ApiResponse<String>> patientRegister(
-            @Valid @RequestBody PatientRegisterRequest request
+    @PostMapping(value = "/register")
+    public ResponseEntity<ApiResponse<String>> ambulanceDriverRegister(
+            @Valid @RequestBody AmbulanceDriverRegisterRequest request
     ) {
-        return service.patientRegister(request);
+        return service.ambulanceDriverRegister(request);
     }
 
     @PostMapping(value = "/login")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> login(
+    public ResponseEntity<ApiResponse<AuthenticationResponse>> ambulanceDriverLogin(
             @Valid @RequestBody AuthenticationRequest request
     ) {
-        return service.login(request);
+        return service.ambulanceDriverLogin(request);
     }
 }

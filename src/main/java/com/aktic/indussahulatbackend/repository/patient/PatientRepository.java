@@ -8,7 +8,7 @@ import javax.swing.text.html.Option;
 import java.util.Optional;
 
 @Repository
-public interface PatientRepository extends JpaRepository<Patient, Integer>
+public interface PatientRepository extends JpaRepository<Patient, Long>
 {
     Optional<Patient> findById(Long id);
 
