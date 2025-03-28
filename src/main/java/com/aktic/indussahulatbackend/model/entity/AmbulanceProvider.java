@@ -1,11 +1,14 @@
 package com.aktic.indussahulatbackend.model.entity;
 
 
+import com.aktic.indussahulatbackend.model.common.UserBase;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -19,7 +22,7 @@ import java.time.Instant;
 @Table(name = "ambulance_providers")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class AmbulanceProvider {
+public class AmbulanceProvider implements UserBase {
     @Id
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
@@ -55,6 +58,11 @@ public class AmbulanceProvider {
     @Column(name = "is_verified", nullable = false)
     private Boolean isVerified;
 
+    @ManyToOne
+    @JoinColumn(name = "role_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Role role;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;
@@ -62,4 +70,9 @@ public class AmbulanceProvider {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.isVerified = this.isVerified != null && this.isVerified;
+    }
 }
