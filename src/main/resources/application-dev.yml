@@ -4,9 +4,7 @@ spring:
   jackson:
     time-zone: UTC
   datasource:
-    url: jdbc:postgresql://localhost:5432/Indus-Sahulat
-    username: postgres
-    password: 123456789
+    url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?user=postgres.uwmfmhuiarguikbxpweh&password=4t6PVkrG_FSGY99
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
@@ -19,7 +17,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
 
 
 server:

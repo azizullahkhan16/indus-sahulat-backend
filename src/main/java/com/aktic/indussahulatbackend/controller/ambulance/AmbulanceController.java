@@ -5,6 +5,7 @@ import com.aktic.indussahulatbackend.model.request.FormRequest;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.service.ambulance.AmbulanceService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +24,9 @@ public class AmbulanceController
     private AmbulanceService ambulanceService;
 
     @PostMapping("/getAvailable")
-    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAvailableAmbulances(@RequestBody FormRequest formRequest)
-    {
+    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAvailableAmbulances(@Valid @RequestBody FormRequest formRequest) {
         List<AmbulanceDTO> ambulanceList = ambulanceService.getAvailableAmbulances(formRequest);
-        ApiResponse<List<AmbulanceDTO>> apiResponse = new ApiResponse<>(true,"Ambulances fetched successfully",ambulanceList);
-        System.out.println("This is my API response" + apiResponse);
+        ApiResponse<List<AmbulanceDTO>> apiResponse = new ApiResponse<>(true, "Ambulances fetched successfully", ambulanceList);
         return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 }
