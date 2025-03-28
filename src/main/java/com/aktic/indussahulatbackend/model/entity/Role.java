@@ -15,31 +15,20 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "companies")
+@Table(name = "roles")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class Company {
+public class Role {
+
     @Id
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "phone", nullable = false)
-    private String phone;
-
-    @Column(name = "email", nullable = false)
-    private String email;
-
-    @Column(name = "website")
-    private String website;
+    @Column(name = "role_name", nullable = false, unique = true)
+    private String roleName;
 
     @Column(name = "description")
     private String description;
-
-    @Column(name = "logo")
-    private String logo;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
@@ -48,5 +37,6 @@ public class Company {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
 
 }

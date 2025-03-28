@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AmbulanceRepository extends JpaRepository<Ambulance, Integer>
+public interface AmbulanceRepository extends JpaRepository<Ambulance, Long>
 {
     List<Ambulance> findByAmbulanceType(AmbulanceType ambulanceType);
 }
