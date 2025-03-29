@@ -4,7 +4,7 @@ spring:
   jackson:
     time-zone: UTC
   datasource:
-    url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?user=postgres.uwmfmhuiarguikbxpweh&password=4t6PVkrG_FSGY99
+    url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?user=postgres.uwmfmhuiarguikbxpweh&password=${SUPABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:

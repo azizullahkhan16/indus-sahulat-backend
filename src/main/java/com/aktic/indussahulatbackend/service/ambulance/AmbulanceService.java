@@ -11,24 +11,29 @@ import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.question.QuestionRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
+import com.aktic.indussahulatbackend.util.ApiResponse;
+import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-@Service
-public class AmbulanceService
-{
 
-    @Autowired
-    private AmbulanceRepository ambulanceRepository;
-    @Autowired
-    private PatientRepository patientRepository;
-    @Autowired
-    private QuestionRepository questionRepository;
-    @Autowired
-    private ResponseRepository responseRepository;
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AmbulanceService {
+    private final SnowflakeIdGenerator idGenerator;
+    private final AmbulanceRepository ambulanceRepository;
+    private final PatientRepository patientRepository;
+    private final QuestionRepository questionRepository;
+    private final ResponseRepository responseRepository;
 
     public AmbulanceType determineCategory(FormRequest formRequest) {
         boolean isUnconscious = false;
@@ -47,7 +52,7 @@ public class AmbulanceService
         boolean needOxygenSupply = false;
 
         List<FormRequest.Answer> answers = formRequest.getAnswerList();
-        Long patientId = 1L;
+        Long patientId = 1906063873792307200L;   // Have to retrieve patientId by token or how??
 
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new PatientNotFoundException(PatientNotFoundException.DEFAULT_MESSAGE));
@@ -60,13 +65,13 @@ public class AmbulanceService
                     .map(Option::getOptionText)
                     .toList();
 
-            responseRepository.save(Response.builder()
-                    .patient(patient)
-                    .question(question)
-                    .response("response")
-                    .build());
-
             for (String res : answer.getResponses()) {
+                responseRepository.save(
+                        Response.builder().id(idGenerator.nextId())
+                                .patient(patient)
+                                .question(question)
+                                .response(res)
+                                .build());
                 if (availableOptions.contains(res)) {
                     switch (res) {
                         case "Unresponsive" -> isUnconscious = true;
@@ -93,33 +98,36 @@ public class AmbulanceService
                 AmbulanceType.ADVANCED : AmbulanceType.NORMAL;
     }
 
-    public List<AmbulanceDTO> getAvailableAmbulances(FormRequest formRequest) {
-//        if (formRequest == null || formRequest.getAnswerList() == null || formRequest.getAnswerList().isEmpty()) {
-//            throw new InvalidFormRequestException("FormRequest cannot be null or empty");
-//        }
-        AmbulanceType category = determineCategory(formRequest);
-//        if (category == null) {
-//            throw new InvalidFormRequestException("Could not determine category from formRequest");
-//        }
-        List<Ambulance> ambulanceList = ambulanceRepository.findByAmbulanceType(category);
+    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAvailableAmbulances(FormRequest formRequest) {
+        try {
+            AmbulanceType category = determineCategory(formRequest);
+            if (category == null) {
+                throw new NoSuchElementException("Cannot find category for the given form request.");
+            }
+            List<Ambulance> ambulanceList = ambulanceRepository.findByAmbulanceType(category);
 
+            if (ambulanceList == null || ambulanceList.isEmpty()) {
+                throw new AmbulanceNotFoundException("No available ambulances found for the given category.");
+            }
+            List<AmbulanceDTO> ambulanceDTOList = ambulanceList.stream().map(
+                    ambulance -> new AmbulanceDTO(
+                            ambulance.getAmbulanceType(),
+                            ambulance.getCompany().getId(),
+                            ambulance.getId(),
+                            ambulance.getColor(),
+                            ambulance.getImage(),
+                            ambulance.getLicensePlate(),
+                            ambulance.getMake(),
+                            ambulance.getModel(),
+                            ambulance.getYear()
+                    )
+            ).toList();
 
-        if (ambulanceList == null || ambulanceList.isEmpty()) {
-            throw new AmbulanceNotFoundException("No available ambulances found for the given category.");
+            return ResponseEntity.ok(new ApiResponse<>(true, "Available ambulances retrieved successfully.", ambulanceDTOList));
+        } catch (NoSuchElementException e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
         }
-
-        return ambulanceList.stream().map(
-                ambulance -> new AmbulanceDTO(
-                        ambulance.getAmbulanceType(),
-                        ambulance.getCompany().getId(),
-                        ambulance.getId(),
-                        ambulance.getColor(),
-                        ambulance.getImage(),
-                        ambulance.getLicensePlate(),
-                        ambulance.getMake(),
-                        ambulance.getModel(),
-                        ambulance.getYear()
-                )
-        ).collect(Collectors.toList());
     }
 }
