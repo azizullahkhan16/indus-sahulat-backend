@@ -6,7 +6,7 @@ import com.aktic.indussahulatbackend.exception.customexceptions.DriverNotFoundEx
 import com.aktic.indussahulatbackend.model.entity.Ambulance;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
-import com.aktic.indussahulatbackend.model.entity.Ambulance_Assignment;
+import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
@@ -16,7 +16,6 @@ import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,7 @@ public class AmbulanceAssignmentService
     private final AmbulanceRepository ambulanceRepository;
     private final AmbulanceDriverRepository ambulanceDriverRepository;
 
-    public ResponseEntity<ApiResponse<Ambulance_Assignment>> assignDriver(AmbulanceAssignmentRequest ambulanceAssignmentRequest)
+    public ResponseEntity<ApiResponse<AmbulanceAssignment>> assignDriver(AmbulanceAssignmentRequest ambulanceAssignmentRequest)
     {
         try{
             Long providerId = ambulanceAssignmentRequest.getAmbulance_providerId();
@@ -42,7 +41,7 @@ public class AmbulanceAssignmentService
             Ambulance ambulance = ambulanceRepository.findById(ambulanceId).orElseThrow(()-> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
             Long driverId = ambulanceAssignmentRequest.getDriver_id();
             AmbulanceDriver driver = ambulanceDriverRepository.findById(driverId).orElseThrow(()-> new DriverNotFoundException(DriverNotFoundException.DEFAULT_MESSAGE));
-            Ambulance_Assignment ambulanceAssignment = Ambulance_Assignment.builder()
+            AmbulanceAssignment ambulanceAssignment = AmbulanceAssignment.builder()
                     .id(idGenerator.nextId())
                     .ambulanceProvider(provider)
                     .ambulance(ambulance)

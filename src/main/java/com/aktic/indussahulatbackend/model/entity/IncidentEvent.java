@@ -1,6 +1,7 @@
 package com.aktic.indussahulatbackend.model.entity;
 
 import com.aktic.indussahulatbackend.model.common.Location;
+import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,12 +38,8 @@ public class IncidentEvent {
     private AmbulanceProvider ambulanceProvider;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_id", nullable = true, updatable = false)
-    private Ambulance ambulance;
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_driver_id", nullable = true, updatable = false)
-    private AmbulanceDriver ambulanceDriver;
+    @JoinColumn(name = "ambulance_assignment_id", nullable = true, updatable = false)
+    private AmbulanceAssignment ambulanceAssignment;
 
     @Embedded
     @AttributeOverrides({
@@ -64,6 +61,10 @@ public class IncidentEvent {
     })
     private Location destination;
 
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private EventStatus status;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;
@@ -71,4 +72,12 @@ public class IncidentEvent {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @PrePersist
+    private void setDefaultStatus() {
+        if (this.status == null) {
+            this.status = EventStatus.CREATED;
+        }
+    }
+
 }

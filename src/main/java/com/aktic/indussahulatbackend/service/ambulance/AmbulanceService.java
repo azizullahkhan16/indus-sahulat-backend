@@ -74,6 +74,7 @@ public class AmbulanceService {
                                 .patient(patient)
                                 .question(question)
                                 .response(res)
+
                                 .build());
                 if (availableOptions.contains(res)) {
                     switch (res) {

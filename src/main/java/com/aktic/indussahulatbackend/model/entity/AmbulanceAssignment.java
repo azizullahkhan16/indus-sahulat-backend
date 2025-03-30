@@ -10,34 +10,30 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "responses")
+@Table(name = "ambulance_assignments")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class Response {
+public class AmbulanceAssignment {
     @Id
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false, updatable = false)
-    private IncidentEvent event;
+    @JoinColumn(name = "ambulance_provider_id", nullable = false, updatable = false)
+    private AmbulanceProvider ambulanceProvider;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "patient_id", nullable = false, updatable = false)
-    private Patient patient;
+    @JoinColumn(name = "ambulance_id", nullable = false, updatable = false)
+    private Ambulance ambulance;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_id", nullable = false, updatable = false)
-    private Question question;
-
-    @Column(name = "response", nullable = false)
-    private String response;
+    @JoinColumn(name = "ambulance_driver_id", nullable = false, updatable = false)
+    private AmbulanceDriver ambulanceDriver;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)

@@ -1,6 +1,6 @@
 package com.aktic.indussahulatbackend.controller.ambulanceProvider.ambulance;
 
-import com.aktic.indussahulatbackend.model.entity.Ambulance_Assignment;
+import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.model.request.FormRequest;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
@@ -32,7 +32,7 @@ public class AmbulanceProviderAmbulanceController
     }
 
     @PostMapping("/assign-driver")
-    public ResponseEntity<ApiResponse<Ambulance_Assignment>> assignDriver(@RequestBody AmbulanceAssignmentRequest ambulanceAssignmentRequest)
+    public ResponseEntity<ApiResponse<AmbulanceAssignment>> assignDriver(@RequestBody AmbulanceAssignmentRequest ambulanceAssignmentRequest)
     {
         return ambulanceAssignmentService.assignDriver(ambulanceAssignmentRequest);
     }

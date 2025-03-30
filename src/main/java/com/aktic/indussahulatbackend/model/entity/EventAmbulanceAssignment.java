@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.model.entity;
 
+import com.aktic.indussahulatbackend.model.enums.EventAmbulanceStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,25 +16,25 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "ambulance_assignments")
+@Table(name = "event_ambulance_assignments")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class Ambulance_Assignment {
+public class EventAmbulanceAssignment {
     @Id
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_provider_id", nullable = false, updatable = false)
-    private AmbulanceProvider ambulanceProvider;
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private EventAmbulanceStatus status;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_id", nullable = false, updatable = false)
-    private Ambulance ambulance;
+    @JoinColumn(name = "ambulance_assignment_id", nullable = false, updatable = false)
+    private AmbulanceAssignment ambulanceAssignment;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_driver_id", nullable = false, updatable = false)
-    private AmbulanceDriver ambulanceDriver;
+    @JoinColumn(name = "event_id", nullable = false, updatable = false)
+    private IncidentEvent event;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
@@ -42,4 +43,12 @@ public class Ambulance_Assignment {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (status == null)
+        {
+            this.status = EventAmbulanceStatus.REQUESTED;
+        }
+    }
 }
