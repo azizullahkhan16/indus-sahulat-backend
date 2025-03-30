@@ -42,10 +42,10 @@ public class DataInitializerConfig {
     CommandLineRunner insertRoles() {
         return args -> {
             try {
-                if (!roleRepository.existsByRoleName("PATIENT")) {
+                if (!roleRepository.existsByRoleName("ROLE_PATIENT")) {
                     Role patientRole = Role.builder()
                             .id(snowflakeIdGenerator.nextId())
-                            .roleName("PATIENT")
+                            .roleName("ROLE_PATIENT")
                             .description("This is a patient role")
                             .build();
                     roleRepository.save(patientRole);
@@ -53,10 +53,10 @@ public class DataInitializerConfig {
                 }
 
                 // create role for Ambulance Driver
-                if (!roleRepository.existsByRoleName("AMBULANCE_DRIVER")) {
+                if (!roleRepository.existsByRoleName("ROLE_AMBULANCE_DRIVER")) {
                     Role ambulanceDriverRole = Role.builder()
                             .id(snowflakeIdGenerator.nextId())
-                            .roleName("AMBULANCE_DRIVER")
+                            .roleName("ROLE_AMBULANCE_DRIVER")
                             .description("This is an ambulance driver role")
                             .build();
                     roleRepository.save(ambulanceDriverRole);
@@ -64,10 +64,10 @@ public class DataInitializerConfig {
                 }
 
                 // create role for Ambulance Provider
-                if (!roleRepository.existsByRoleName("AMBULANCE_PROVIDER")) {
+                if (!roleRepository.existsByRoleName("ROLE_AMBULANCE_PROVIDER")) {
                     Role ambulanceProviderRole = Role.builder()
                             .id(snowflakeIdGenerator.nextId())
-                            .roleName("AMBULANCE_PROVIDER")
+                            .roleName("ROLE_AMBULANCE_PROVIDER")
                             .description("This is an ambulance provider role")
                             .build();
                     roleRepository.save(ambulanceProviderRole);

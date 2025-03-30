@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.service.jwt;
 
+import com.aktic.indussahulatbackend.model.common.UserBase;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -46,6 +47,12 @@ public class JwtService {
         return buildToken(new HashMap<>(), username);
     }
 
+    public String generateToken(UserBase user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole().getRoleName()); // Add role as a claim
+        return buildToken(claims, user.getPhone());
+    }
+
     public String generateToken(Map<String, Object> extraClaims, String username) {
         return buildToken(extraClaims, username);
     }
@@ -65,6 +72,10 @@ public class JwtService {
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     public String extractUsername(String token) {
