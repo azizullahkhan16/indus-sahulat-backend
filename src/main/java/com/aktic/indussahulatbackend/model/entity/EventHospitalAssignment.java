@@ -16,17 +16,17 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "event_ambulance_assignments")
+@Table(name = "patient_admit_requests")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class EventAmbulanceAssignment {
+public class EventHospitalAssignment {
     @Id
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_assignment_id", nullable = false, updatable = false)
-    private AmbulanceAssignment ambulanceAssignment;
+    @JoinColumn(name = "hospital_id", nullable = false, updatable = false)
+    private Hospital hospital;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false, updatable = false)

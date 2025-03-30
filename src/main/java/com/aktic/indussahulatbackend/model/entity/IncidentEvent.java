@@ -26,10 +26,6 @@ public class IncidentEvent {
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "hospital_id", nullable = true, updatable = false)
-    private Hospital hospital;
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = true, updatable = false)
     private Patient patient;
 
@@ -39,7 +35,11 @@ public class IncidentEvent {
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "ambulance_assignment_id", nullable = true, updatable = false)
-    private AmbulanceAssignment ambulanceAssignment;
+    private EventAmbulanceAssignment ambulanceAssignment;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "hospital_assignment_id", nullable = true, updatable = false)
+    private EventHospitalAssignment hospitalAssignment;
 
     @Embedded
     @AttributeOverrides({
@@ -60,6 +60,13 @@ public class IncidentEvent {
             @AttributeOverride(name = "longitude", column = @Column(name = "destination_longitude"))
     })
     private Location destination;
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "latitude", column = @Column(name = "live_latitude")),
+            @AttributeOverride(name = "longitude", column = @Column(name = "live_longitude"))
+    })
+    private Location liveLocation;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
