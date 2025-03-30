@@ -16,6 +16,8 @@ import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProvi
 import com.aktic.indussahulatbackend.repository.company.CompanyRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.role.RoleRepository;
+import com.aktic.indussahulatbackend.security.CustomUserDetailsService;
+import com.aktic.indussahulatbackend.security.UserDetailsServiceImpl;
 import com.aktic.indussahulatbackend.security.UserPrincipal;
 import com.aktic.indussahulatbackend.service.jwt.JwtService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
@@ -29,6 +31,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +54,8 @@ public class AuthService {
     private final AmbulanceProviderRepository ambulanceProviderRepository;
     private final CompanyRepository companyRepository;
     private final AmbulanceDriverRepository ambulanceDriverRepository;
+    private final CustomUserDetailsService userDetailsService;
+    private final UserDetailsServiceImpl userDetailsServiceImpl;
 
     @Transactional
     public ResponseEntity<ApiResponse<String>> patientRegister(PatientRegisterRequest request) {
@@ -59,7 +66,7 @@ public class AuthService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Phone is already in use", null));
             }
 
-            Role userRole = roleRepository.findByRoleName("PATIENT");
+            Role userRole = roleRepository.findByRoleName("ROLE_PATIENT");
             if (userRole == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Role not found", null));
             }
@@ -102,17 +109,15 @@ public class AuthService {
 
             try {
                 authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                request.getPhone(),
-                                request.getPassword()
-                        )
+                        new UsernamePasswordAuthenticationToken(patient, request.getPassword())
                 );
             } catch (BadCredentialsException ex) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ApiResponse<>(false, "Invalid password", null));
             }
 
-            String token = jwtService.generateToken(patient.getPhone());
+
+            String token = jwtService.generateToken(patient);
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
                     new AuthenticationResponse(new PatientInfo(patient), token)));
 
@@ -138,7 +143,7 @@ public class AuthService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Company not found", null));
             }
 
-            Role userRole = roleRepository.findByRoleName("AMBULANCE_PROVIDER");
+            Role userRole = roleRepository.findByRoleName("ROLE_AMBULANCE_PROVIDER");
             if (userRole == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Role not found", null));
             }
@@ -179,7 +184,7 @@ public class AuthService {
             try {
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
-                                request.getPhone(),
+                                ambulanceProvider,
                                 request.getPassword()
                         )
                 );
@@ -188,7 +193,7 @@ public class AuthService {
                         .body(new ApiResponse<>(false, "Invalid password", null));
             }
 
-            String token = jwtService.generateToken(ambulanceProvider.getPhone());
+            String token = jwtService.generateToken(ambulanceProvider);
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
                     new AuthenticationResponse(new AmbulanceProviderInfo(ambulanceProvider), token)));
 
@@ -213,7 +218,7 @@ public class AuthService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Company not found", null));
             }
 
-            Role userRole = roleRepository.findByRoleName("AMBULANCE_DRIVER");
+            Role userRole = roleRepository.findByRoleName("ROLE_AMBULANCE_DRIVER");
             if (userRole == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Role not found", null));
             }
@@ -253,7 +258,7 @@ public class AuthService {
             try {
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
-                                request.getPhone(),
+                                ambulanceDriver,
                                 request.getPassword()
                         )
                 );
@@ -262,7 +267,7 @@ public class AuthService {
                         .body(new ApiResponse<>(false, "Invalid password", null));
             }
 
-            String token = jwtService.generateToken(ambulanceDriver.getPhone());
+            String token = jwtService.generateToken(ambulanceDriver);
 
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
                     new AuthenticationResponse(new AmbulanceDriverInfo(ambulanceDriver), token)));

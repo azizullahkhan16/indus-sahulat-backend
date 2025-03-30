@@ -2,7 +2,7 @@ package com.aktic.indussahulatbackend.config;
 
 import com.aktic.indussahulatbackend.constant.SecurityConstants;
 import com.aktic.indussahulatbackend.filter.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletRequest;
+import com.aktic.indussahulatbackend.security.CustomAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +22,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final CustomAuthenticationProvider authenticationProvider;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -30,17 +31,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(SecurityConstants.WHITE_LIST_URL)
                                 .permitAll()
-                                .requestMatchers("/patient/**").hasAnyRole("PAITENT", "ADMIN")
-                                .requestMatchers("/ambulance-driver/**").hasAnyRole("AMBULANCE_DRVIER", "ADMIN")
-                                .requestMatchers("/ambulance-provider/**").hasAnyRole("AMBULANCE_PROVIDER", "ADMIN")
-                                .requestMatchers("/admin/**").hasRole("ADMIN")
-                                .anyRequest().authenticated()
+                                .requestMatchers("/api/patient/**").hasAnyRole("PATIENT", "ADMIN")
+                                .requestMatchers("/api/ambulance-driver/**").hasAnyRole("AMBULANCE_DRIVER", "ADMIN")
+                                .requestMatchers("/api/ambulance-provider/**").hasAnyRole("AMBULANCE_PROVIDER", "ADMIN")
+                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .anyRequest().denyAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-//                .authenticationProvider(authenticationProvider)
+                .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 //                .logout(logout -> logout.addLogoutHandler(logoutHandler))
         return http.build();
     }
-
 }

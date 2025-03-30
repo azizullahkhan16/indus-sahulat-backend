@@ -1,6 +1,7 @@
 package com.aktic.indussahulatbackend.filter;
 
 import com.aktic.indussahulatbackend.constant.SecurityConstants;
+import com.aktic.indussahulatbackend.security.CustomUserDetailsService;
 import com.aktic.indussahulatbackend.service.jwt.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     @Qualifier("userDetailsServiceImpl")
     @Lazy
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -59,9 +60,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
         userPhone = jwtService.extractUsername(jwt);
+        String userRole = jwtService.extractRole(jwt);
 
         if (userPhone != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userPhone);
+            UserDetails userDetails = this.userDetailsService.loadUserByUsernameAndRole(userPhone, userRole);
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 System.out.println("userDetails: " + userDetails.getAuthorities());
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
