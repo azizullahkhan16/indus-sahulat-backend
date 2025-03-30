@@ -49,10 +49,10 @@ public class AmbulanceAssignmentService
                     .ambulanceDriver(driver)
                     .build();
             ambulanceAssignmentRepository.save(ambulanceAssignment);
-            return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance Driver assigned successfully", ambulanceAssignment), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance Driver assigned successfully", null), HttpStatus.OK);  //Returning null cause cant return the ambulanceAssignment obj due to lazy.
         } catch (Exception e) {
             log.error("Error occurred while assigning ambulance drivers: {}", e.getMessage());
-            return ResponseEntity.status(500).body(new ApiResponse<>(false, "Internal Server Error", null));
+            return ResponseEntity.status(404).body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
 }

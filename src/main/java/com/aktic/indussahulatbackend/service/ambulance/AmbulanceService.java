@@ -11,6 +11,7 @@ import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.question.QuestionRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
+import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class AmbulanceService {
     private final PatientRepository patientRepository;
     private final QuestionRepository questionRepository;
     private final ResponseRepository responseRepository;
+    private final AuthService authService;
 
     public AmbulanceType determineCategory(FormRequest formRequest) {
         boolean isUnconscious = false;
@@ -52,7 +54,8 @@ public class AmbulanceService {
         boolean needOxygenSupply = false;
 
         List<FormRequest.Answer> answers = formRequest.getAnswerList();
-        Long patientId = 1906063873792307200L;   // Have to retrieve patientId by token or how??
+        Patient currentUser = (Patient) authService.getCurrentUser();
+        Long patientId = currentUser.getId();
 
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new PatientNotFoundException(PatientNotFoundException.DEFAULT_MESSAGE));

@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface AmbulanceProviderRepository extends JpaRepository<AmbulanceProvider, Long> {
     Optional<AmbulanceProvider> findByPhone(String phone);
+
+    boolean existsByEmail(String email);
 }
