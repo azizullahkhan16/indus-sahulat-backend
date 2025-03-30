@@ -19,35 +19,42 @@ import java.util.Optional;
 
 @Service("userDetailsServiceImpl")
 @RequiredArgsConstructor
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UserDetailsServiceImpl implements CustomUserDetailsService {
 
     private final PatientRepository patientRepository;
-
     private final AmbulanceDriverRepository driverRepository;
-
     private final AmbulanceProviderRepository providerRepository;
 
     @Override
-    @Transactional
     public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
-        // Find user in different repositories
-        Optional<Patient> patient = patientRepository.findByPhone(phone);
-        if (patient.isPresent()) {
-            return UserPrincipal.create(patient.get());
-        }
+        throw new UsernameNotFoundException("User role is required to fetch details");
+    }
 
-        Optional<AmbulanceDriver> driver = driverRepository.findByPhone(phone);
-        if (driver.isPresent()) {
-            Hibernate.initialize(driver.get().getCompany());
-            return UserPrincipal.create(driver.get());
-        }
+    @Override
+    @Transactional
+    public UserDetails loadUserByUsernameAndRole(String phone, String userRole) throws UsernameNotFoundException {
+        return findUserByPhoneAndRole(phone, userRole);
+    }
 
-        Optional<AmbulanceProvider> provider = providerRepository.findByPhone(phone);
-        if (provider.isPresent()) {
-            Hibernate.initialize(provider.get().getCompany());
-            return UserPrincipal.create(provider.get());
-        }
-
-        throw new UsernameNotFoundException("User not found with email: " + phone);
+    private UserDetails findUserByPhoneAndRole(String phone, String userRole) {
+        System.out.println("Finding user by phone: " + phone + " and role: " + userRole);
+        return switch (userRole.toUpperCase()) {
+            case "ROLE_PATIENT" -> patientRepository.findByPhone(phone)
+                    .map(UserPrincipal::create)
+                    .orElseThrow(() -> new UsernameNotFoundException("Patient not found with phone: " + phone));
+            case "ROLE_AMBULANCE_DRIVER" -> driverRepository.findByPhone(phone)
+                    .map(driver -> {
+                        Hibernate.initialize(driver.getCompany());
+                        return UserPrincipal.create(driver);
+                    })
+                    .orElseThrow(() -> new UsernameNotFoundException("Ambulance driver not found with phone: " + phone));
+            case "ROLE_AMBULANCE_PROVIDER" -> providerRepository.findByPhone(phone)
+                    .map(provider -> {
+                        Hibernate.initialize(provider.getCompany());
+                        return UserPrincipal.create(provider);
+                    })
+                    .orElseThrow(() -> new UsernameNotFoundException("Ambulance provider not found with phone: " + phone));
+            default -> throw new IllegalArgumentException("Invalid user role: " + userRole);
+        };
     }
 }
