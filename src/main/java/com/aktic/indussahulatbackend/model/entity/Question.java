@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
@@ -20,7 +22,6 @@ import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
 public class Question {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
@@ -31,9 +32,11 @@ public class Question {
     @Column(name = "question", nullable = false)
     private String question;
 
+    @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 

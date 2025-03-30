@@ -1,9 +1,8 @@
-package com.aktic.indussahulatbackend.controller.question;
+package com.aktic.indussahulatbackend.controller.patient.questionnaire;
 
 import com.aktic.indussahulatbackend.model.response.QuestionForm;
 import com.aktic.indussahulatbackend.service.questionnaire.QuestionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,9 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/question")
+@RequestMapping("/api/patient")
 @RequiredArgsConstructor
-public class QuestionController {
+public class PatientQuestionController {
 
    private final QuestionService questionService;
 

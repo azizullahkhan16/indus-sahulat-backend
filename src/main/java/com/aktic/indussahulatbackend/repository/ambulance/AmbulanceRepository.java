@@ -11,4 +11,6 @@ import java.util.List;
 public interface AmbulanceRepository extends JpaRepository<Ambulance, Long>
 {
     List<Ambulance> findByAmbulanceType(AmbulanceType ambulanceType);
+
+    boolean existsByLicensePlate(String s);
 }
