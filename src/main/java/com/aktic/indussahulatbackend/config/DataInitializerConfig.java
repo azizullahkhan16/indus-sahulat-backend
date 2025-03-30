@@ -226,78 +226,6 @@ public class DataInitializerConfig {
 
     @Bean
     @Order(5)
-    CommandLineRunner insertAmbulanceProviders() {
-        return args -> {
-            try {
-                Company company = companyRepository.findByName("Indus Healthcare").orElseThrow(() ->
-                        new IllegalArgumentException("Company 'Indus Healthcare' not found."));
-
-                Role providerRole = roleRepository.findByroleName("AMBULANCE_PROVIDER").orElseThrow(() ->
-                        new IllegalArgumentException("Role 'Ambulance Provider' not found."));
-
-                if (!ambulanceProviderRepository.existsByEmail("provider@indushealthcare.com")) {
-                    AmbulanceProvider provider = AmbulanceProvider.builder()
-                            .id(snowflakeIdGenerator.nextId())
-                            .company(company)
-                            .firstName("John")
-                            .lastName("Doe")
-                            .email("provider@indushealthcare.com")
-                            .password(passwordEncoder.encode("securepassword")) // Encrypt the password
-                            .CNIC("12345-6789012-3")
-                            .phone("+92 300 1234567")
-                            .age(35)
-                            .image("https://example.com/john_doe.jpg")
-                            .isVerified(true)
-                            .role(providerRole)
-                            .build();
-
-                    ambulanceProviderRepository.save(provider);
-                    log.info("Ambulance Provider 'John Doe' inserted successfully.");
-                }
-            } catch (Exception e) {
-                log.error("Error inserting ambulance providers: " + e.getMessage());
-            }
-        };
-    }
-
-    @Bean
-    @Order(6)
-    CommandLineRunner insertAmbulanceDrivers() {
-        return args -> {
-            try {
-                Company company = companyRepository.findByName("Rescue 1122").orElseThrow(() ->
-                        new IllegalArgumentException("Company 'Rescue 1122' not found."));
-
-                Role driverRole = roleRepository.findByroleName("AMBULANCE_DRIVER").orElseThrow(() ->
-                        new IllegalArgumentException("Role 'Ambulance Driver' not found."));
-
-                if (!ambulanceDriverRepository.existsByEmail("driver@rescue1122.pk")) {
-                    AmbulanceDriver driver = AmbulanceDriver.builder()
-                            .id(snowflakeIdGenerator.nextId())
-                            .company(company)
-                            .firstName("Jane")
-                            .lastName("Smith")
-                            .email("driver@rescue1122.pk")
-                            .password(passwordEncoder.encode("securepassword"))
-                            .CNIC("98765-4321098-7")
-                            .phone("+92 301 7654321")
-                            .age(30)
-                            .image("https://example.com/jane_smith.jpg")
-                            .isVerified(true)
-                            .role(driverRole)
-                            .build();
-
-                    ambulanceDriverRepository.save(driver);
-                    log.info("Ambulance Driver 'Jane Smith' inserted successfully.");
-                }
-            } catch (Exception e) {
-                log.error("Error inserting ambulance drivers: " + e.getMessage());
-            }
-        };
-    }
-
-    @Bean
-    @Order(7)
     CommandLineRunner insertQuestionnaire() {
         return args -> {
             try {
@@ -319,7 +247,7 @@ public class DataInitializerConfig {
     }
 
     @Bean
-    @Order(8)
+    @Order(6)
     CommandLineRunner insertQuestions() {
         return args -> {
             try {
@@ -395,9 +323,5 @@ public class DataInitializerConfig {
             }
         };
     }
-
-
-
-
 
 }
