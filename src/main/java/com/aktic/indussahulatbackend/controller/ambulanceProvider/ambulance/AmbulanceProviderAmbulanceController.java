@@ -10,10 +10,7 @@ import com.aktic.indussahulatbackend.util.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,6 +32,18 @@ public class AmbulanceProviderAmbulanceController
     public ResponseEntity<ApiResponse<AmbulanceAssignment>> assignDriver(@RequestBody AmbulanceAssignmentRequest ambulanceAssignmentRequest)
     {
         return ambulanceAssignmentService.assignDriver(ambulanceAssignmentRequest);
+    }
+
+    @GetMapping("/get-ambulances")
+    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAllAmbulances()
+    {
+        return ambulanceService.getAllAmbulances();
+    }
+    
+    @GetMapping("/get-ambulance/{id}")
+    public ResponseEntity<ApiResponse<AmbulanceDTO>> getAmbulance(@PathVariable Long id)
+    {
+        return ambulanceService.getAmbulance(id);
     }
 }
 

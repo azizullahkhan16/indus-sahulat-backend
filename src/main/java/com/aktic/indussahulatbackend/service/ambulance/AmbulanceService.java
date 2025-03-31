@@ -134,4 +134,68 @@ public class AmbulanceService {
                     .body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
+
+    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAllAmbulances() {
+        try {
+        AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
+        Company providerCompany = ambulanceProvider.getCompany();
+
+        List<Ambulance> ambulancesList = ambulanceRepository.findByCompany(providerCompany);
+
+        if (ambulancesList == null || ambulancesList.isEmpty()) {
+            throw new AmbulanceNotFoundException("No ambulances found for this company.");
+        }
+
+        List<AmbulanceDTO> List = ambulancesList.stream().map(
+                ambulance -> new AmbulanceDTO(
+                        ambulance.getAmbulanceType(),
+                        ambulance.getCompany().getId(),
+                        ambulance.getId(),
+                        ambulance.getColor(),
+                        ambulance.getImage(),
+                        ambulance.getLicensePlate(),
+                        ambulance.getMake(),
+                        ambulance.getModel(),
+                        ambulance.getYear()
+                )
+        ).toList();
+
+        return new ResponseEntity<>(new ApiResponse<>(true, "Ambulances retrieved successfully.", List), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    public ResponseEntity<ApiResponse<AmbulanceDTO>> getAmbulance(Long id) {
+        try {
+            AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
+            Company providerCompany = ambulanceProvider.getCompany();
+
+            Ambulance ambulance = ambulanceRepository.findById(id).orElseThrow(()-> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
+
+            if (!ambulance.getCompany().getId().equals(providerCompany.getId())) {
+                throw new AmbulanceNotFoundException("Ambulance not found in your company.");
+            }
+
+            AmbulanceDTO ambulanceDTO = new AmbulanceDTO(
+                    ambulance.getAmbulanceType(),
+                    ambulance.getCompany().getId(),
+                    ambulance.getId(),
+                    ambulance.getColor(),
+                    ambulance.getImage(),
+                    ambulance.getLicensePlate(),
+                    ambulance.getMake(),
+                    ambulance.getModel(),
+                    ambulance.getYear()
+            );
+
+            return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance retrieved successfully.", ambulanceDTO), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
 }

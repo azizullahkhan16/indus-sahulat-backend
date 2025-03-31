@@ -24,5 +24,6 @@ public class PatientQuestionController {
        return ResponseEntity.ok(questions);
    }
 
+
 }
 
