@@ -137,7 +137,7 @@ public class DataInitializerConfig {
                     log.info("Hospital 'Indus Hospital Karachi' inserted successfully.");
                 }
 
-                if (!hospitalRepository.existsByName("Aga Khan Karachi")) {
+                if (!hospitalRepository.existsByName("Agha Khan Karachi")) {
                     Hospital hospital2 = Hospital.builder()
                             .id(snowflakeIdGenerator.nextId())
                             .name("Aga Khan Karachi")
