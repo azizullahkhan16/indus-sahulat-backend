@@ -22,19 +22,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AmbulanceProviderAmbulanceController
 {
-    private final AmbulanceService ambulanceService;
-    private final AmbulanceAssignmentService ambulanceAssignmentService;
+//    private final AmbulanceService ambulanceService;
+//    private final AmbulanceAssignmentService ambulanceAssignmentService;
 
-    @PostMapping("/get-ambulances")
-    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAvailableAmbulances(@Valid @RequestBody FormRequest formRequest)
-    {
-        return ambulanceService.getAvailableAmbulances(formRequest);
-    }
-
-    @PostMapping("/assign-driver")
-    public ResponseEntity<ApiResponse<AmbulanceAssignment>> assignDriver(@RequestBody AmbulanceAssignmentRequest ambulanceAssignmentRequest)
-    {
-        return ambulanceAssignmentService.assignDriver(ambulanceAssignmentRequest);
-    }
+//    @PostMapping("/get-ambulances")
+//    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAvailableAmbulances(@Valid @RequestBody FormRequest formRequest)
+//    {
+//        return ambulanceService.getAvailableAmbulances(formRequest);
+//    }
+//
+//    @PostMapping("/assign-driver")
+//    public ResponseEntity<ApiResponse<AmbulanceAssignment>> assignDriver(@RequestBody AmbulanceAssignmentRequest ambulanceAssignmentRequest)
+//    {
+//        return ambulanceAssignmentService.assignDriver(ambulanceAssignmentRequest);
+//    }
 }
 

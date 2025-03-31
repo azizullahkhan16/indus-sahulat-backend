@@ -255,6 +255,12 @@ public class DataInitializerConfig {
                 Questionnaire questionnaire = questionnaireRepository.findByTitle("Emergency Response Questionnaire")
                         .orElseThrow(() -> new IllegalArgumentException("Questionnaire 'Emergency Response Questionnaire' not found."));
 
+                // Check if the questions already exist
+                if (questionRepository.existsByQuestionnaireId(questionnaire.getId())) {
+                    log.info("Questions for 'Emergency Response Questionnaire' already exist.");
+                    return;
+                }
+
                 // Define questions and options
                 List<Question> questions = List.of(
                         Question.builder()

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -36,8 +37,13 @@ public class Response {
     @JoinColumn(name = "question_id", nullable = false, updatable = false)
     private Question question;
 
-    @Column(name = "response", nullable = false)
-    private String response;
+    @ManyToMany
+    @JoinTable(
+            name = "response_option",
+            joinColumns = @JoinColumn(name = "response_id"),
+            inverseJoinColumns = @JoinColumn(name = "option_id")
+    )
+    private List<Option> response;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)

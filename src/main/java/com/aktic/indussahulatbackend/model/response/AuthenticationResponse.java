@@ -1,6 +1,6 @@
 package com.aktic.indussahulatbackend.model.response;
 
-import com.aktic.indussahulatbackend.model.response.actor.UserInfo;
+import com.aktic.indussahulatbackend.model.response.actor.UserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class AuthenticationResponse {
-    private UserInfo userInfo;
+    private UserDTO userInfo;
     private String token;
 }
 

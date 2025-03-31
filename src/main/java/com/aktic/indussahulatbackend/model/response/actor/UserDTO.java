@@ -11,7 +11,7 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfo {
+public class UserDTO {
     private Long id;
     private String firstName;
     private String lastName;
@@ -25,7 +25,7 @@ public class UserInfo {
     private String image;
     private Integer age;
 
-    public UserInfo(UserBase user) {
+    public UserDTO(UserBase user) {
         this.id = user.getId();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();

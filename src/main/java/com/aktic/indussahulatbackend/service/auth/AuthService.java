@@ -7,10 +7,9 @@ import com.aktic.indussahulatbackend.model.request.AmbulanceProviderRegisterRequ
 import com.aktic.indussahulatbackend.model.request.AuthenticationRequest;
 import com.aktic.indussahulatbackend.model.request.PatientRegisterRequest;
 import com.aktic.indussahulatbackend.model.response.AuthenticationResponse;
-import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverInfo;
-import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderInfo;
-import com.aktic.indussahulatbackend.model.response.actor.PatientInfo;
-import com.aktic.indussahulatbackend.model.response.actor.UserInfo;
+import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
+import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderDTO;
+import com.aktic.indussahulatbackend.model.response.actor.PatientDTO;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProviderRepository;
 import com.aktic.indussahulatbackend.repository.company.CompanyRepository;
@@ -31,9 +30,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -119,7 +115,7 @@ public class AuthService {
 
             String token = jwtService.generateToken(patient);
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
-                    new AuthenticationResponse(new PatientInfo(patient), token)));
+                    new AuthenticationResponse(new PatientDTO(patient), token)));
 
 
         }catch (Exception e) {
@@ -195,7 +191,7 @@ public class AuthService {
 
             String token = jwtService.generateToken(ambulanceProvider);
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
-                    new AuthenticationResponse(new AmbulanceProviderInfo(ambulanceProvider), token)));
+                    new AuthenticationResponse(new AmbulanceProviderDTO(ambulanceProvider), token)));
 
         }catch (Exception e) {
             log.error("Error occurred while logging in", e);
@@ -270,7 +266,7 @@ public class AuthService {
             String token = jwtService.generateToken(ambulanceDriver);
 
             return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
-                    new AuthenticationResponse(new AmbulanceDriverInfo(ambulanceDriver), token)));
+                    new AuthenticationResponse(new AmbulanceDriverDTO(ambulanceDriver), token)));
 
         }catch (Exception e) {
             log.error("Error occurred while logging in", e);

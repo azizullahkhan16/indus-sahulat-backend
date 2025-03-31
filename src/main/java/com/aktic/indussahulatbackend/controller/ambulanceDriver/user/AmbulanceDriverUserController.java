@@ -1,6 +1,6 @@
 package com.aktic.indussahulatbackend.controller.ambulanceDriver.user;
 
-import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverInfo;
+import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
 import com.aktic.indussahulatbackend.service.user.UserService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class AmbulanceDriverUserController {
     private final UserService userService;
 
     @GetMapping("/get-user")
-    public ResponseEntity<ApiResponse<AmbulanceDriverInfo>> getAmbulanceDriverInfo() {
+    public ResponseEntity<ApiResponse<AmbulanceDriverDTO>> getAmbulanceDriverInfo() {
         return userService.getAmbulanceDriverInfo();
     }
 }

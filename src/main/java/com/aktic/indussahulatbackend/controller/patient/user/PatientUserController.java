@@ -1,7 +1,7 @@
 package com.aktic.indussahulatbackend.controller.patient.user;
 
 
-import com.aktic.indussahulatbackend.model.response.actor.PatientInfo;
+import com.aktic.indussahulatbackend.model.response.actor.PatientDTO;
 import com.aktic.indussahulatbackend.service.user.UserService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class PatientUserController {
     private final UserService userService;
 
     @GetMapping("/get-user")
-    public ResponseEntity<ApiResponse<PatientInfo>> getPatientInfo() {
+    public ResponseEntity<ApiResponse<PatientDTO>> getPatientInfo() {
         return userService.getPatientInfo();
     }
 }
