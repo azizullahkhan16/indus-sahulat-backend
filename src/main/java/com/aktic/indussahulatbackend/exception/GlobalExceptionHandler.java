@@ -42,6 +42,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse(ex.getMessage(),false), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(AmbulanceAssignmentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAmbulanceAssignmentNotFoundException(AmbulanceAssignmentNotFoundException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage(),false), HttpStatus.NOT_FOUND);
+    }
+
 
     // Handle generic exceptions (unexpected errors)
 //    @ExceptionHandler(Exception.class)
