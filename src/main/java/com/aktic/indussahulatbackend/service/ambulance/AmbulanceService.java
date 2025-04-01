@@ -18,6 +18,7 @@ import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -137,12 +138,17 @@ public class AmbulanceService {
 //        }
 //    }
 
-    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAllUnassignedAmbulances() {
+    public ResponseEntity<ApiResponse<Page<AmbulanceDTO>>> getAllUnassignedAmbulances(Integer pageNumber, Integer limit) {
         try {
+            int page = (pageNumber != null && pageNumber > 0) ? pageNumber : 0;
+            int size = (limit != null && limit > 0) ? limit : 10;
+
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
             Company providerCompany = ambulanceProvider.getCompany();
 
-            List<Ambulance> allAmbulances = ambulanceRepository.findByCompany(providerCompany);
+            Page<Ambulance> allAmbulances = ambulanceRepository.findByCompany(providerCompany,pageable);
 
             List<Ambulance> unassignedAmbulances = allAmbulances.stream()
                     .filter(ambulance -> !ambulanceAssignmentRepository.existsByAmbulanceAndIsActiveTrue(ambulance))
@@ -152,21 +158,12 @@ public class AmbulanceService {
                 throw new AmbulanceNotFoundException("No unassigned ambulances found for this company.");
             }
 
-            List<AmbulanceDTO> ambulanceDTOList = unassignedAmbulances.stream().map(
-                    ambulance -> new AmbulanceDTO(
-                            ambulance.getAmbulanceType(),
-                            ambulance.getCompany().getId(),
-                            ambulance.getId(),
-                            ambulance.getColor(),
-                            ambulance.getImage(),
-                            ambulance.getLicensePlate(),
-                            ambulance.getMake(),
-                            ambulance.getModel(),
-                            ambulance.getYear()
-                    )
-            ).toList();
+            List<AmbulanceDTO> ambulanceDTOList = unassignedAmbulances.stream()
+                    .map(AmbulanceDTO::new)
+                    .toList();
+            Page<AmbulanceDTO> ambulanceDTOPage = new PageImpl<>(ambulanceDTOList, pageable, ambulanceDTOList.size());
 
-            return new ResponseEntity<>(new ApiResponse<>(true, "Unassigned ambulances retrieved successfully.", ambulanceDTOList), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse<>(true, "Unassigned ambulances retrieved successfully.", ambulanceDTOPage), HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -186,17 +183,7 @@ public class AmbulanceService {
                 throw new AmbulanceNotFoundException("Ambulance not found in your company.");
             }
 
-            AmbulanceDTO ambulanceDTO = new AmbulanceDTO(
-                    ambulance.getAmbulanceType(),
-                    ambulance.getCompany().getId(),
-                    ambulance.getId(),
-                    ambulance.getColor(),
-                    ambulance.getImage(),
-                    ambulance.getLicensePlate(),
-                    ambulance.getMake(),
-                    ambulance.getModel(),
-                    ambulance.getYear()
-            );
+            AmbulanceDTO ambulanceDTO = new AmbulanceDTO(ambulance);
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance retrieved successfully.", ambulanceDTO), HttpStatus.OK);
         } catch (Exception e) {

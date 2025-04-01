@@ -8,7 +8,7 @@ import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
-import com.aktic.indussahulatbackend.model.response.ambulanceAssignment.AmbulanceAssignmentDTO;
+import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
@@ -18,6 +18,10 @@ import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -70,13 +74,7 @@ public class AmbulanceAssignmentService
                     .build();
             ambulanceAssignmentRepository.save(ambulanceAssignment);
 
-            AmbulanceAssignmentDTO ambulanceAssignmentDTO = new AmbulanceAssignmentDTO(
-                    ambulanceAssignment.getId(),
-                    ambulanceAssignment.getAmbulanceProvider(),
-                    ambulanceAssignment.getAmbulance(),
-                    ambulanceAssignment.getAmbulanceDriver(),
-                    ambulanceAssignment.getIsActive()
-            );
+            AmbulanceAssignmentDTO ambulanceAssignmentDTO = new AmbulanceAssignmentDTO(ambulanceAssignment);
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance Driver assigned successfully", ambulanceAssignmentDTO), HttpStatus.OK);  //Returning null cause cant return the ambulanceAssignment obj due to lazy.
         } catch (Exception e) {
@@ -86,27 +84,24 @@ public class AmbulanceAssignmentService
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<List<AmbulanceAssignmentDTO>>> getAllActiveAssignments()
+    public ResponseEntity<ApiResponse<Page<AmbulanceAssignmentDTO>>> getAllActiveAssignments(Integer pageNumber, Integer limit)
     {
         try {
-            List<AmbulanceAssignment> ambulanceAssignments = ambulanceAssignmentRepository.findByIsActiveTrue();
+            int page = (pageNumber != null && pageNumber > 0) ? pageNumber : 0;
+            int size = (limit != null && limit > 0) ? limit : 10;
+
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+            Page<AmbulanceAssignment> ambulanceAssignments = ambulanceAssignmentRepository.findByIsActiveTrue(pageable);
 
             if (ambulanceAssignments.isEmpty())
             {
                 throw new NoSuchElementException("No active ambulance assignments found.");
             }
 
-            List<AmbulanceAssignmentDTO> ambulanceAssignmentDTOList = ambulanceAssignments.stream().map(
-                    ambulanceAssignment -> new AmbulanceAssignmentDTO(
-                            ambulanceAssignment.getId(),
-                            ambulanceAssignment.getAmbulanceProvider(),
-                            ambulanceAssignment.getAmbulance(),
-                            ambulanceAssignment.getAmbulanceDriver(),
-                            ambulanceAssignment.getIsActive()
-                    )
-            ).toList();
+            Page<AmbulanceAssignmentDTO> ambulanceAssignmentDTOPage = ambulanceAssignments.map(AmbulanceAssignmentDTO::new);
 
-            return new ResponseEntity<>(new ApiResponse<>(true,"Ambulance Assignments fetched successfully", ambulanceAssignmentDTOList), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse<>(true,"Ambulance Assignments fetched successfully", ambulanceAssignmentDTOPage), HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error occurred while retrieving active ambulance assignments: {}", e.getMessage());
             return ResponseEntity.status(404).body(new ApiResponse<>(false, e.getMessage(), null));

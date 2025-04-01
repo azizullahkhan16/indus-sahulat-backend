@@ -1,20 +1,18 @@
 package com.aktic.indussahulatbackend.service.ambulanceDriver;
 
 
-import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceNotFoundException;
 import com.aktic.indussahulatbackend.exception.customexceptions.DriverNotFoundException;
-import com.aktic.indussahulatbackend.model.entity.Ambulance;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
 import com.aktic.indussahulatbackend.model.entity.Company;
-import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
-import com.aktic.indussahulatbackend.model.response.ambulanceDriver.AmbulanceDriverDTO;
+import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,12 +29,17 @@ public class AmbulanceDriverService {
     private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
 
 
-    public ResponseEntity<ApiResponse<List<AmbulanceDriverDTO>>> getAllUnassignedDriver() {
+    public ResponseEntity<ApiResponse<Page<AmbulanceDriverDTO>>> getAllUnassignedDriver(Integer pageNumber, Integer limit) {
         try {
+            int page = (pageNumber != null && pageNumber > 0) ? pageNumber : 0;
+            int size = (limit != null && limit > 0) ? limit : 10;
+
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
             Company providerCompany = ambulanceProvider.getCompany();
 
-            List<AmbulanceDriver> driversList = ambulanceDriverRepository.findByCompany(providerCompany);
+            Page<AmbulanceDriver> driversList = ambulanceDriverRepository.findByCompany(providerCompany,pageable);
 
             List<AmbulanceDriver> unassignedDrivers = driversList.stream()
                     .filter(driver -> !ambulanceAssignmentRepository.existsByAmbulanceDriverAndIsActiveTrue(driver))
@@ -46,20 +49,13 @@ public class AmbulanceDriverService {
                 throw new DriverNotFoundException("No unassigned drivers found for this company.");
             }
 
-            List<AmbulanceDriverDTO> List = unassignedDrivers.stream().map(
-                    driver -> new AmbulanceDriverDTO(
-                            driver.getId(),
-                            driver.getFirstName(),
-                            driver.getLastName(),
-                            driver.getEmail(),
-                            driver.getCNIC(),
-                            driver.getPhone(),
-                            driver.getAge(),
-                            driver.getImage()
-                    )
-            ).toList();
+            List<AmbulanceDriverDTO> DriverDTOList = unassignedDrivers.stream()
+                    .map(AmbulanceDriverDTO::new)
+                    .toList();
 
-            return new ResponseEntity<>(new ApiResponse<>(true, "Drivers retrieved successfully.", List), HttpStatus.OK);
+            Page<AmbulanceDriverDTO> ambulanceDriverDTOPage = new PageImpl<>(DriverDTOList, pageable, DriverDTOList.size());
+
+            return new ResponseEntity<>(new ApiResponse<>(true, "Drivers retrieved successfully.", ambulanceDriverDTOPage), HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -78,16 +74,7 @@ public class AmbulanceDriverService {
                 throw new DriverNotFoundException("Driver not found in your company.");
             }
 
-            AmbulanceDriverDTO ambulanceDriverDTO = new AmbulanceDriverDTO(
-                    ambulanceDriver.getId(),
-                    ambulanceDriver.getFirstName(),
-                    ambulanceDriver.getLastName(),
-                    ambulanceDriver.getEmail(),
-                    ambulanceDriver.getCNIC(),
-                    ambulanceDriver.getPhone(),
-                    ambulanceDriver.getAge(),
-                    ambulanceDriver.getImage()
-            );
+            AmbulanceDriverDTO ambulanceDriverDTO = new AmbulanceDriverDTO(ambulanceDriver);
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance Driver retrieved successfully.", ambulanceDriverDTO), HttpStatus.OK);
         } catch (Exception e) {
