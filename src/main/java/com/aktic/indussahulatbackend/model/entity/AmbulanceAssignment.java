@@ -35,6 +35,9 @@ public class AmbulanceAssignment {
     @JoinColumn(name = "ambulance_driver_id", nullable = false, updatable = false)
     private AmbulanceDriver ambulanceDriver;
 
+    @Column(name = "is_active")
+    private Boolean isActive;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;

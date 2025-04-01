@@ -8,6 +8,7 @@ import com.aktic.indussahulatbackend.model.enums.AmbulanceType;
 import com.aktic.indussahulatbackend.model.request.FormRequest;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
+import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.question.QuestionRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
@@ -36,6 +37,7 @@ public class AmbulanceService {
     private final QuestionRepository questionRepository;
     private final ResponseRepository responseRepository;
     private final AuthService authService;
+    private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
 
     public AmbulanceType determineCategory(FormRequest formRequest) {
         boolean isUnconscious = false;
@@ -135,38 +137,43 @@ public class AmbulanceService {
         }
     }
 
-    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAllAmbulances() {
+    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAllUnassignedAmbulances() {
         try {
-        AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
-        Company providerCompany = ambulanceProvider.getCompany();
+            AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
+            Company providerCompany = ambulanceProvider.getCompany();
 
-        List<Ambulance> ambulancesList = ambulanceRepository.findByCompany(providerCompany);
+            List<Ambulance> allAmbulances = ambulanceRepository.findByCompany(providerCompany);
 
-        if (ambulancesList == null || ambulancesList.isEmpty()) {
-            throw new AmbulanceNotFoundException("No ambulances found for this company.");
-        }
+            List<Ambulance> unassignedAmbulances = allAmbulances.stream()
+                    .filter(ambulance -> !ambulanceAssignmentRepository.existsByAmbulanceAndIsActiveTrue(ambulance))
+                    .toList();
 
-        List<AmbulanceDTO> List = ambulancesList.stream().map(
-                ambulance -> new AmbulanceDTO(
-                        ambulance.getAmbulanceType(),
-                        ambulance.getCompany().getId(),
-                        ambulance.getId(),
-                        ambulance.getColor(),
-                        ambulance.getImage(),
-                        ambulance.getLicensePlate(),
-                        ambulance.getMake(),
-                        ambulance.getModel(),
-                        ambulance.getYear()
-                )
-        ).toList();
+            if (unassignedAmbulances.isEmpty()) {
+                throw new AmbulanceNotFoundException("No unassigned ambulances found for this company.");
+            }
 
-        return new ResponseEntity<>(new ApiResponse<>(true, "Ambulances retrieved successfully.", List), HttpStatus.OK);
+            List<AmbulanceDTO> ambulanceDTOList = unassignedAmbulances.stream().map(
+                    ambulance -> new AmbulanceDTO(
+                            ambulance.getAmbulanceType(),
+                            ambulance.getCompany().getId(),
+                            ambulance.getId(),
+                            ambulance.getColor(),
+                            ambulance.getImage(),
+                            ambulance.getLicensePlate(),
+                            ambulance.getMake(),
+                            ambulance.getModel(),
+                            ambulance.getYear()
+                    )
+            ).toList();
+
+            return new ResponseEntity<>(new ApiResponse<>(true, "Unassigned ambulances retrieved successfully.", ambulanceDTOList), HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
+
 
     public ResponseEntity<ApiResponse<AmbulanceDTO>> getAmbulance(Long id) {
         try {

@@ -23,7 +23,7 @@ public class AmbulanceProviderDriverController {
     @GetMapping("get-drivers")
     public ResponseEntity<ApiResponse<List<AmbulanceDriverDTO>>> getAllDrivers()
     {
-        return ambulanceDriverService.getAllDriver();
+        return ambulanceDriverService.getAllUnassignedDriver();
     }
 
     @GetMapping("get-drvier/{id}")

@@ -9,6 +9,7 @@ import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
 import com.aktic.indussahulatbackend.model.entity.Company;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.model.response.ambulanceDriver.AmbulanceDriverDTO;
+import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
@@ -27,20 +28,25 @@ public class AmbulanceDriverService {
 
     private final AmbulanceDriverRepository ambulanceDriverRepository;
     private final AuthService authService;
+    private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
 
 
-    public ResponseEntity<ApiResponse<List<AmbulanceDriverDTO>>> getAllDriver() {
+    public ResponseEntity<ApiResponse<List<AmbulanceDriverDTO>>> getAllUnassignedDriver() {
         try {
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
             Company providerCompany = ambulanceProvider.getCompany();
 
             List<AmbulanceDriver> driversList = ambulanceDriverRepository.findByCompany(providerCompany);
 
-            if (driversList == null || driversList.isEmpty()) {
-                throw new AmbulanceNotFoundException("No drivers found for this company.");
+            List<AmbulanceDriver> unassignedDrivers = driversList.stream()
+                    .filter(driver -> !ambulanceAssignmentRepository.existsByAmbulanceDriverAndIsActiveTrue(driver))
+                    .toList();
+
+            if (unassignedDrivers.isEmpty()) {
+                throw new DriverNotFoundException("No unassigned drivers found for this company.");
             }
 
-            List<AmbulanceDriverDTO> List = driversList.stream().map(
+            List<AmbulanceDriverDTO> List = unassignedDrivers.stream().map(
                     driver -> new AmbulanceDriverDTO(
                             driver.getId(),
                             driver.getFirstName(),
