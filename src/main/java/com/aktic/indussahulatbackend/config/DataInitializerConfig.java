@@ -232,7 +232,7 @@ public class DataInitializerConfig {
                 // Check if the questionnaire already exists
                 if (!questionnaireRepository.existsByTitle("Emergency Response Questionnaire")) {
                     Questionnaire questionnaire = Questionnaire.builder()
-                            .id(snowflakeIdGenerator.nextId())
+                            .id(1L)
                             .title("Emergency Response Questionnaire")
                             .description("A questionnaire to assess the condition of a patient during emergencies.")
                             .build();
