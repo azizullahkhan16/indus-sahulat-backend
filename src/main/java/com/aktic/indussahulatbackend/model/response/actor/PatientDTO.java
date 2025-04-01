@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PatientInfo extends UserInfo {
+public class PatientDTO extends UserDTO {
     private String gender;
     private String bloodGroup;
     private Float height;
     private Float weight;
 
-    public PatientInfo(Patient patient) {
+    public PatientDTO(Patient patient) {
         super(patient);
         this.bloodGroup = patient.getBloodType().getValue();
         this.gender = patient.getGender().getValue();

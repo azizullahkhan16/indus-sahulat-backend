@@ -11,7 +11,7 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompanyInfo {
+public class CompanyDTO {
     private Long id;
     private String name;
     private String email;
@@ -22,7 +22,7 @@ public class CompanyInfo {
     private Instant createdAt;
     private Instant updatedAt;
 
-    public CompanyInfo(Company company) {
+    public CompanyDTO(Company company) {
         this.id = company.getId();
         this.name = company.getName();
         this.email = company.getEmail();

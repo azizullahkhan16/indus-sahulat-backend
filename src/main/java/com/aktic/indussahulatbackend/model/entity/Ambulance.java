@@ -40,6 +40,7 @@ public class Ambulance {
     @Column(name = "license_plate", nullable = false, unique = true)
     private String licensePlate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "ambulance_type", nullable = false)
     private AmbulanceType ambulanceType;
 

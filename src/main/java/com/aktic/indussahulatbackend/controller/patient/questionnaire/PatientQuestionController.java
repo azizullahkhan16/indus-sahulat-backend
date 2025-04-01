@@ -1,12 +1,14 @@
 package com.aktic.indussahulatbackend.controller.patient.questionnaire;
 
-import com.aktic.indussahulatbackend.model.response.QuestionForm;
-import com.aktic.indussahulatbackend.service.questionnaire.QuestionService;
+import com.aktic.indussahulatbackend.model.entity.Question;
+import com.aktic.indussahulatbackend.model.request.AnswerDTO;
+import com.aktic.indussahulatbackend.model.request.SaveResponseDTO;
+import com.aktic.indussahulatbackend.service.questionnaire.QuestionnaireService;
+import com.aktic.indussahulatbackend.util.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 import java.util.List;
@@ -16,13 +18,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PatientQuestionController {
 
-   private final QuestionService questionService;
+   private final QuestionnaireService questionnaireService;
 
-   @GetMapping(value = "/get-questions")
-   public ResponseEntity<List<QuestionForm>> getQuestions() {
-       List<QuestionForm> questions = questionService.getAllQuestions();
-       return ResponseEntity.ok(questions);
+   @GetMapping( "/get-questionnaire/{questionnaireId}")
+   public ResponseEntity<ApiResponse<List<Question>>> getQuestionnaire(@PathVariable Long questionnaireId) {
+       return questionnaireService.getQuestionnaire(questionnaireId);
    }
+
+   @PostMapping("/save-response/{questionnaireId}")
+    public ResponseEntity<ApiResponse<Void>> saveResponse(@PathVariable Long questionnaireId,
+                                                          @Valid @RequestBody SaveResponseDTO response) {
+         return questionnaireService.saveResponse(questionnaireId, response);
+    }
 
 
 }

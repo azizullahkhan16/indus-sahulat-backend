@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.controller.ambulanceProvider.ambulance;
 
+import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.model.request.FormRequest;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
@@ -22,11 +23,11 @@ public class AmbulanceProviderAmbulanceController
     private final AmbulanceService ambulanceService;
     private final AmbulanceAssignmentService ambulanceAssignmentService;
 
-    @PostMapping("/get-ambulances")
-    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAvailableAmbulances(@Valid @RequestBody FormRequest formRequest)
-    {
-        return ambulanceService.getAvailableAmbulances(formRequest);
-    }
+//    @PostMapping("/get-ambulances")
+//    public ResponseEntity<ApiResponse<List<AmbulanceDTO>>> getAvailableAmbulances(@Valid @RequestBody FormRequest formRequest)
+//    {
+//        return ambulanceService.getAvailableAmbulances(formRequest);
+//    }
 
     @PostMapping("/assign-driver")
     public ResponseEntity<ApiResponse<AmbulanceAssignmentDTO>> assignDriver(@RequestBody AmbulanceAssignmentRequest ambulanceAssignmentRequest)
@@ -39,7 +40,7 @@ public class AmbulanceProviderAmbulanceController
     {
         return ambulanceService.getAllUnassignedAmbulances();
     }
-    
+
     @GetMapping("/get-ambulance/{id}")
     public ResponseEntity<ApiResponse<AmbulanceDTO>> getAmbulance(@PathVariable Long id)
     {

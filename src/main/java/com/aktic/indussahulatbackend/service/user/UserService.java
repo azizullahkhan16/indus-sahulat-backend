@@ -3,9 +3,9 @@ package com.aktic.indussahulatbackend.service.user;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
 import com.aktic.indussahulatbackend.model.entity.Patient;
-import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverInfo;
-import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderInfo;
-import com.aktic.indussahulatbackend.model.response.actor.PatientInfo;
+import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
+import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderDTO;
+import com.aktic.indussahulatbackend.model.response.actor.PatientDTO;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProviderRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
@@ -31,14 +31,14 @@ public class UserService {
     private final AuthService authService;
 
     @Transactional
-    public ResponseEntity<ApiResponse<PatientInfo>> getPatientInfo() {
+    public ResponseEntity<ApiResponse<PatientDTO>> getPatientInfo() {
         try{
             Patient currentUser = (Patient) authService.getCurrentUser();
 
             Patient currentPatient = patientRepository.findById(currentUser.getId())
                     .orElseThrow(() -> new NoSuchElementException("Patient not found"));
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Patient info fetched successfully", new PatientInfo(currentPatient)));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Patient info fetched successfully", new PatientDTO(currentPatient)));
 
         }catch (NoSuchElementException e) {
             log.error("Validation error: {}", e.getMessage());
@@ -51,7 +51,7 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<AmbulanceDriverInfo>> getAmbulanceDriverInfo() {
+    public ResponseEntity<ApiResponse<AmbulanceDriverDTO>> getAmbulanceDriverInfo() {
         try{
             AmbulanceDriver currentUser = (AmbulanceDriver) authService.getCurrentUser();
 
@@ -60,7 +60,7 @@ public class UserService {
 
             System.out.println("Current Ambulance Driver: " + currentAmbulanceDriver);
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Ambulance Driver info fetched successfully", new AmbulanceDriverInfo(currentAmbulanceDriver)));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Ambulance Driver info fetched successfully", new AmbulanceDriverDTO(currentAmbulanceDriver)));
 
         }catch (NoSuchElementException e) {
             log.error("Validation error: {}", e.getMessage());
@@ -73,14 +73,14 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<AmbulanceProviderInfo>> getAmbulanceProviderInfo() {
+    public ResponseEntity<ApiResponse<AmbulanceProviderDTO>> getAmbulanceProviderInfo() {
         try{
             AmbulanceProvider currentUser = (AmbulanceProvider) authService.getCurrentUser();
 
             AmbulanceProvider currentAmbulanceProvider = ambulanceProviderRepository.findById(currentUser.getId())
                     .orElseThrow(() -> new NoSuchElementException("Ambulance Provider not found"));
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "Ambulance Provider info fetched successfully", new AmbulanceProviderInfo(currentAmbulanceProvider)));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Ambulance Provider info fetched successfully", new AmbulanceProviderDTO(currentAmbulanceProvider)));
         }catch (NoSuchElementException e) {
             log.error("Validation error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

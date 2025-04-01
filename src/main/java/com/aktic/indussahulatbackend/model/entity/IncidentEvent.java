@@ -26,7 +26,7 @@ public class IncidentEvent {
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "patient_id", nullable = true, updatable = false)
+    @JoinColumn(name = "patient_id", nullable = false, updatable = false)
     private Patient patient;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -46,20 +46,20 @@ public class IncidentEvent {
             @AttributeOverride(name = "latitude", column = @Column(name = "pickup_latitude")),
             @AttributeOverride(name = "longitude", column = @Column(name = "pickup_longitude"))
     })
-    private Location pickup;
+    private Location pickupLocation;
 
     @Column(name = "pickup_time")
     private Instant pickupTime;  // Pickup time
 
-    @Column(name = "dropoff_time")
+    @Column(name = "dropOff_time")
     private Instant dropOffTime;
 
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride(name = "latitude", column = @Column(name = "destination_latitude")),
-            @AttributeOverride(name = "longitude", column = @Column(name = "destination_longitude"))
+            @AttributeOverride(name = "latitude", column = @Column(name = "dropOff_latitude")),
+            @AttributeOverride(name = "longitude", column = @Column(name = "dropOff_longitude"))
     })
-    private Location destination;
+    private Location dropOffLocation;
 
     @Embedded
     @AttributeOverrides({
