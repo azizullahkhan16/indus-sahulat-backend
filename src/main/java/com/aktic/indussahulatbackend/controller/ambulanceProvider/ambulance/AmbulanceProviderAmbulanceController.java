@@ -1,6 +1,5 @@
 package com.aktic.indussahulatbackend.controller.ambulanceProvider.ambulance;
 
-import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.model.request.FormRequest;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
