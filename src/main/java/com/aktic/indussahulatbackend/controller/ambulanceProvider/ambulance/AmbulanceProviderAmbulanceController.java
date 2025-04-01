@@ -4,7 +4,8 @@ import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.model.request.FormRequest;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
-import com.aktic.indussahulatbackend.model.response.ambulanceAssignment.AmbulanceAssignmentDTO;
+import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
+//import com.aktic.indussahulatbackend.model.response.ambulanceAssignment.AmbulanceAssignmentDTO
 import com.aktic.indussahulatbackend.service.ambulance.AmbulanceService;
 import com.aktic.indussahulatbackend.service.ambulanceAssignment.AmbulanceAssignmentService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
@@ -57,6 +58,12 @@ public class AmbulanceProviderAmbulanceController
     public ResponseEntity<ApiResponse> UnassignAnAmbulance(@PathVariable Long id)
     {
         return ambulanceAssignmentService.unassignAmbulance(id);
+    }
+
+    @GetMapping("/available-ambulances/{eventId}")
+    public ResponseEntity<ApiResponse<List<AmbulanceAssignmentDTO>>> getAvailableAmbulances(@PathVariable Long eventId)
+    {
+        return ambulanceService.getAvailableAmbulances(eventId);
     }
 }
 

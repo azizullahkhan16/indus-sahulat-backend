@@ -5,10 +5,14 @@ import com.aktic.indussahulatbackend.exception.customexceptions.PatientNotFoundE
 import com.aktic.indussahulatbackend.exception.customexceptions.QuestionNotFoundException;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.AmbulanceType;
+import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.request.FormRequest;
+import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
+import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
+import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.question.QuestionRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
@@ -22,8 +26,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -38,6 +44,7 @@ public class AmbulanceService {
     private final ResponseRepository responseRepository;
     private final AuthService authService;
     private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
+    private final EventAmbulanceAssignmentRepository eventAmbulanceAssignmentRepository;
 
 //    public AmbulanceType determineCategory(FormRequest formRequest) {
 //        boolean isUnconscious = false;
@@ -199,6 +206,47 @@ public class AmbulanceService {
             );
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance retrieved successfully.", ambulanceDTO), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    public ResponseEntity<ApiResponse<List<AmbulanceAssignmentDTO>>> getAvailableAmbulances(Long eventId) {
+        try {
+            // 1. Get all ambulance assignments
+            List<AmbulanceAssignment> allAssignments = ambulanceAssignmentRepository.findAll();
+
+            // 2. Filter available ambulances
+            List<AmbulanceAssignmentDTO> availableAmbulances = new ArrayList<>();
+
+            for (AmbulanceAssignment assignment : allAssignments) {
+                // Check if this assignment is linked to any event
+                Optional<EventAmbulanceAssignment> eventAssignment =
+                        eventAmbulanceAssignmentRepository.findByAmbulanceAssignment(assignment);
+
+                // If no event assignment exists, ambulance is available
+                if (eventAssignment.isEmpty()) {
+                    availableAmbulances.add(new AmbulanceAssignmentDTO(assignment));
+                    continue;
+                }
+
+                // If there is an event assignment, check the event status
+                IncidentEvent event = eventAssignment.get().getEvent();
+
+                // If event is completed or cancelled, ambulance is available
+                if (event.getStatus() == EventStatus.PATIENT_ADMITTED ||
+                        event.getStatus() == EventStatus.CANCELLED) {
+                    availableAmbulances.add(new AmbulanceAssignmentDTO(assignment));
+                }
+            }
+
+            // Return successful response with available ambulances
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, "Available ambulances retrieved successfully", availableAmbulances)
+            );
+
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
