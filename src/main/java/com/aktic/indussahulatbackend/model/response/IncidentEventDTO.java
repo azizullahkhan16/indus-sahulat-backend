@@ -22,7 +22,7 @@ public class IncidentEventDTO {
     private PatientDTO patient;
     private AmbulanceProviderDTO ambulanceProvider;
     private EventAmbulanceAssignmentDTO eventAmbulanceAssignment;
-    private EventHospitalAssignmentDTO eventHospitalAssignmentDTO;
+    private EventHospitalAssignmentDTO eventHospitalAssignment;
     private Location pickupLocation;
     private Location dropoffLocation;
     private String status;
@@ -37,7 +37,7 @@ public class IncidentEventDTO {
         this.patient = new PatientDTO(incidentEvent.getPatient());
         this.ambulanceProvider = incidentEvent.getAmbulanceProvider() != null ? new AmbulanceProviderDTO(incidentEvent.getAmbulanceProvider()) : null;
         this.eventAmbulanceAssignment = incidentEvent.getAmbulanceAssignment() != null ? new EventAmbulanceAssignmentDTO(incidentEvent.getAmbulanceAssignment()) : null;
-        this.eventHospitalAssignmentDTO = incidentEvent.getHospitalAssignment() != null ? new EventHospitalAssignmentDTO(incidentEvent.getHospitalAssignment()) : null;
+        this.eventHospitalAssignment = incidentEvent.getHospitalAssignment() != null ? new EventHospitalAssignmentDTO(incidentEvent.getHospitalAssignment()) : null;
         this.pickupLocation = incidentEvent.getPickupLocation();
         this.dropoffLocation = incidentEvent.getDropOffLocation();
         this.status = incidentEvent.getStatus().name();

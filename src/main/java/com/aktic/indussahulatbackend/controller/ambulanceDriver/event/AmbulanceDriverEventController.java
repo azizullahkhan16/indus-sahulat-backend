@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/ambulance-driver")
 @RequiredArgsConstructor
@@ -17,7 +19,7 @@ public class AmbulanceDriverEventController {
     private final IncidentEventService incidentEventService;
 
     @GetMapping("/assigned-event")
-    public ResponseEntity<ApiResponse<IncidentEventDTO>> getAssignedEvent() {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAssignedEvent() {
         return incidentEventService.getAssignedEvent();
     }
 
@@ -27,5 +29,10 @@ public class AmbulanceDriverEventController {
             @RequestBody UpdateAssignmentDTO updateAssignmentDTO
     ) {
         return incidentEventService.updateAssignment(eventAmbulanceAssignmentId, updateAssignmentDTO);
+    }
+
+    @PatchMapping("/driver-arrived/{eventId}")
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> driverArrivedAtPickup(@PathVariable Long eventId) {
+        return incidentEventService.driverArrivedAtPickup(eventId);
     }
 }

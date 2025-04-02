@@ -28,4 +28,9 @@ public class PatientEventController
             ) {
         return incidentEventService.createEvent(locationDTO);
     }
+
+    @GetMapping("/get-active-event")
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> getActiveEvent() {
+        return incidentEventService.getActiveEvent();
+    }
 }

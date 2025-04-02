@@ -30,15 +30,15 @@ public class IncidentEvent {
     private Patient patient;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_provider_id", nullable = true, updatable = false)
+    @JoinColumn(name = "ambulance_provider_id")
     private AmbulanceProvider ambulanceProvider;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_assignment_id", nullable = true, updatable = false)
+    @JoinColumn(name = "ambulance_assignment_id")
     private EventAmbulanceAssignment ambulanceAssignment;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "hospital_assignment_id", nullable = true, updatable = false)
+    @JoinColumn(name = "hospital_assignment_id")
     private EventHospitalAssignment hospitalAssignment;
 
     @Embedded
