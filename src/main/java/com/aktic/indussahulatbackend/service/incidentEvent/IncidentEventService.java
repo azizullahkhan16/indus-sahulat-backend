@@ -1,13 +1,16 @@
 package com.aktic.indussahulatbackend.service.incidentEvent;
 
 import com.aktic.indussahulatbackend.model.common.Location;
-import com.aktic.indussahulatbackend.model.entity.IncidentEvent;
-import com.aktic.indussahulatbackend.model.entity.Patient;
-import com.aktic.indussahulatbackend.model.entity.Response;
+import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
+import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
+import com.aktic.indussahulatbackend.model.request.UpdateAssignmentDTO;
+import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.model.response.ResponseDTO;
+import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
+import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
@@ -26,10 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,6 +41,8 @@ public class IncidentEventService {
     private final SnowflakeIdGenerator idGenerator;
     private final AuthService authService;
     private final ResponseRepository responseRepository;
+    private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
+    private final EventAmbulanceAssignmentRepository eventAmbulanceAssignmentRepository;
 
     @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(LocationDTO locationDTO) {
@@ -109,6 +111,82 @@ public class IncidentEventService {
         }catch (Exception e) {
             log.error("Error fetching event: {}", e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>(false, "Error fetching event", null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> getAssignedEvent() {
+        try {
+            // Get the current authenticated ambulance driver
+            AmbulanceDriver driver = (AmbulanceDriver) authService.getCurrentUser();
+
+            // Find the single active ambulance assignment for this driver
+            AmbulanceAssignment ambulanceAssignment =
+                    ambulanceAssignmentRepository.findByAmbulanceDriverAndIsActiveTrue(driver);
+
+            if (ambulanceAssignment == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "No active ambulance assignment found for driver", null));
+            }
+
+            // Find the active event ambulance assignment
+            Optional<EventAmbulanceAssignment> eventAssignmentOpt =
+                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignment(ambulanceAssignment);
+
+            if (eventAssignmentOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "No active event assigned to this ambulance", null));
+            }
+
+            if(eventAssignmentOpt.get().getStatus() != RequestStatus.REQUESTED) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "No active event assigned to this ambulance", null));
+            }
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, "Assigned events retrieved successfully", new IncidentEventDTO(eventAssignmentOpt.get().getEvent()))
+            );
+
+        }  catch (Exception e) {
+            log.error("Error fetching assigned events: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Error fetching assigned events", null));
+        }
+    }
+
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> updateAssignment(Long eventAmbulanceAssignmentId, UpdateAssignmentDTO updateAssignmentDTO) {
+        try{
+            AmbulanceDriver ambulanceDriver = (AmbulanceDriver) authService.getCurrentUser();
+            // Find the active event ambulance assignment
+            EventAmbulanceAssignment eventAssignment =
+                    eventAmbulanceAssignmentRepository.findById(eventAmbulanceAssignmentId).orElseThrow(
+                            () -> new NoSuchElementException("Event ambulance assignment not found")
+                    );
+
+            if(!Objects.equals(eventAssignment.getAmbulanceAssignment().getAmbulanceDriver().getId(), ambulanceDriver.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse<>(false, "You are not authorized to update this assignment", null));
+            }
+
+            if(eventAssignment.getStatus() != RequestStatus.REQUESTED) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "No active event assigned to this ambulance", null));
+            }
+
+            eventAssignment.setStatus(RequestStatus.valueOf(updateAssignmentDTO.getStatus()));
+            // Update the status of the assignment
+            if(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())) {
+                eventAssignment.getEvent().setStatus(EventStatus.DRIVER_ACCEPTED);
+                eventAssignment.getEvent().setAmbulanceAssignment(eventAssignment);
+            }
+            EventAmbulanceAssignment updatedEventAssignment = eventAmbulanceAssignmentRepository.save(eventAssignment);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, "Assigned events updated successfully", new IncidentEventDTO(updatedEventAssignment.getEvent()))
+            );
+
+        }catch (Exception e) {
+            log.error("Error updating assignment: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, "Error updating assignment", null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

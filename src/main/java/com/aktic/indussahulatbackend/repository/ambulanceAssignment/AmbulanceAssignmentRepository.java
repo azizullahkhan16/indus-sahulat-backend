@@ -31,4 +31,6 @@ public interface AmbulanceAssignmentRepository extends JpaRepository<AmbulanceAs
     void unassignById(Long id);
 
     AmbulanceAssignment findByAmbulanceDriverAndIsActiveTrue(AmbulanceDriver ambulanceDriver);
+
+    Optional<AmbulanceAssignment> findByAmbulanceDriver(AmbulanceDriver driver);
 }

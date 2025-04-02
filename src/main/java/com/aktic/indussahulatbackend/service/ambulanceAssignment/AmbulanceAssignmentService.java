@@ -10,6 +10,7 @@ import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
+import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
@@ -74,7 +75,7 @@ public class AmbulanceAssignmentService
                     .ambulanceDriver(driver)
                     .isActive(true)
                     .build();
-            ambulanceAssignmentRepository.save(ambulanceAssignment);
+            ambulanceAssignment = ambulanceAssignmentRepository.save(ambulanceAssignment);
 
             AmbulanceAssignmentDTO ambulanceAssignmentDTO = new AmbulanceAssignmentDTO(ambulanceAssignment);
 
@@ -154,5 +155,9 @@ public class AmbulanceAssignmentService
             log.error("Error occurred while retrieving ambulance assignments: {}", e.getMessage());
             return ResponseEntity.status(500).body(new ApiResponse<>(false, e.getMessage(), null));
         }
+    }
+
+    public ResponseEntity<ApiResponse<EventAmbulanceAssignmentDTO>> assignAmbulance(Long eventId, AmbulanceAssignmentRequest ambulanceAssignmentRequest) {
+        return null;
     }
 }

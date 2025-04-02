@@ -6,6 +6,8 @@ import com.aktic.indussahulatbackend.exception.customexceptions.QuestionNotFound
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.AmbulanceType;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
+import com.aktic.indussahulatbackend.model.enums.RequestStatus;
+import com.aktic.indussahulatbackend.model.request.AssignEventAmbulanceDTO;
 import com.aktic.indussahulatbackend.model.request.FormRequest;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
@@ -13,6 +15,7 @@ import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAmbulanceAssignmentRepository;
+import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.question.QuestionRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
@@ -26,11 +29,9 @@ import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -46,6 +47,7 @@ public class AmbulanceService {
     private final AuthService authService;
     private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
     private final EventAmbulanceAssignmentRepository eventAmbulanceAssignmentRepository;
+    private final IncidentEventRepository incidentEventRepository;
 
 //    public AmbulanceType determineCategory(FormRequest formRequest) {
 //        boolean isUnconscious = false;
@@ -145,6 +147,7 @@ public class AmbulanceService {
 //        }
 //    }
 
+    @Transactional
     public ResponseEntity<ApiResponse<Page<AmbulanceDTO>>> getAllUnassignedAmbulances(Integer pageNumber, Integer limit) {
         try {
             int page = (pageNumber != null && pageNumber > 0) ? pageNumber : 0;
@@ -178,7 +181,7 @@ public class AmbulanceService {
         }
     }
 
-
+    @Transactional
     public ResponseEntity<ApiResponse<AmbulanceDTO>> getAmbulance(Long id) {
         try {
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
@@ -200,6 +203,7 @@ public class AmbulanceService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<List<AmbulanceAssignmentDTO>>> getAvailableAmbulances(Long eventId) {
         try {
             // 1. Get all ambulance assignments
@@ -238,6 +242,69 @@ public class AmbulanceService {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<EventAmbulanceAssignmentDTO>> assignAmbulance(AssignEventAmbulanceDTO eventAmbulanceAssignmentDTO) {
+        try {
+            AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
+            // Check if event exists and the status is CREATED
+            IncidentEvent event = incidentEventRepository.findById(eventAmbulanceAssignmentDTO.getEventId())
+                    .orElseThrow(() -> new NoSuchElementException("Event not found."));
+
+            if (event.getStatus() != EventStatus.CREATED) {
+                throw new IllegalStateException("Ambulance can only be assigned to events with CREATED status");
+            }
+
+            if(event.getAmbulanceAssignment() != null) {
+                throw new IllegalStateException("Ambulance is already assigned to this event");
+            }
+
+            // Check if ambulance assignment exists
+            AmbulanceAssignment ambulanceAssignment = ambulanceAssignmentRepository.findById(eventAmbulanceAssignmentDTO.getAmbulanceAssignmentId())
+                    .orElseThrow(() -> new NoSuchElementException("Ambulance assignment not found"));
+
+            // Check if this ambulance is already assigned to another active event
+            Optional<EventAmbulanceAssignment> existingAssignment =
+                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignment(ambulanceAssignment);
+
+            if (existingAssignment.isPresent()) {
+                IncidentEvent assignedEvent = existingAssignment.get().getEvent();
+                if (assignedEvent.getStatus() != EventStatus.PATIENT_ADMITTED &&
+                        assignedEvent.getStatus() != EventStatus.CANCELLED) {
+                    throw new IllegalStateException("Ambulance is already assigned to an active event");
+                }
+            }
+
+            // Create new event ambulance assignment
+            EventAmbulanceAssignment eventAmbulanceAssignment = EventAmbulanceAssignment.builder()
+                    .id(idGenerator.nextId())
+                    .event(event)
+                    .ambulanceAssignment(ambulanceAssignment)
+                    .build();
+
+            // Save the assignment
+            eventAmbulanceAssignment.getEvent().setStatus(EventStatus.AMBULANCE_ASSIGNED);
+            eventAmbulanceAssignment.getEvent().setAmbulanceProvider(ambulanceProvider);
+            EventAmbulanceAssignment savedAssignment = eventAmbulanceAssignmentRepository.save(eventAmbulanceAssignment);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, "Ambulance assigned successfully", new EventAmbulanceAssignmentDTO(savedAssignment))
+            );
+
+        } catch (NoSuchElementException e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        } catch (IllegalStateException e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "An unexpected error occurred", null));
         }
     }
 }
