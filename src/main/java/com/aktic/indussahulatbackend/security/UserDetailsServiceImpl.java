@@ -5,6 +5,7 @@ import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
 import com.aktic.indussahulatbackend.model.entity.Patient;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProviderRepository;
+import com.aktic.indussahulatbackend.repository.hospitalAdmin.HospitalAdminRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
@@ -24,6 +25,7 @@ public class UserDetailsServiceImpl implements CustomUserDetailsService {
     private final PatientRepository patientRepository;
     private final AmbulanceDriverRepository driverRepository;
     private final AmbulanceProviderRepository providerRepository;
+    private final HospitalAdminRepository hospitalAdminRepository;
 
     @Override
     public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
@@ -54,6 +56,12 @@ public class UserDetailsServiceImpl implements CustomUserDetailsService {
                         return UserPrincipal.create(provider);
                     })
                     .orElseThrow(() -> new UsernameNotFoundException("Ambulance provider not found with phone: " + phone));
+            case "ROLE_HOSPITAL_ADMIN" -> hospitalAdminRepository.findByPhone(phone)
+                    .map(driver -> {
+                        Hibernate.initialize(driver.getHospital());
+                        return UserPrincipal.create(driver);
+                    })
+                    .orElseThrow(() -> new UsernameNotFoundException("Hospital Admin not found with phone: " + phone));
             default -> throw new IllegalArgumentException("Invalid user role: " + userRole);
         };
     }

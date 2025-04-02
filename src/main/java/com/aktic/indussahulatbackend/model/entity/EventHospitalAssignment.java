@@ -16,7 +16,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "patient_admit_requests")
+@Table(name = "event_hospital_assignments")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 public class EventHospitalAssignment {

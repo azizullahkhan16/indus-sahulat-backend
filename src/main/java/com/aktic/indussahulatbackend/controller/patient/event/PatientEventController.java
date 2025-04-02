@@ -33,4 +33,11 @@ public class PatientEventController
     public ResponseEntity<ApiResponse<IncidentEventDTO>> getActiveEvent() {
         return incidentEventService.getActiveEvent();
     }
+
+    @PatchMapping("/cancel-event/{eventId}")
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> cancelEvent(
+            @PathVariable Long eventId
+            ) {
+        return incidentEventService.cancelEvent(eventId);
+    }
 }

@@ -16,7 +16,7 @@ import java.time.Instant;
 @Data
 public class EventHospitalAssignmentDTO {
     private Long id;
-    private Hospital hospital;
+    private HospitalDTO hospital;
     private Long eventId;
     private String status;
     private Instant createdAt;
@@ -24,7 +24,7 @@ public class EventHospitalAssignmentDTO {
 
     public EventHospitalAssignmentDTO(EventHospitalAssignment eventHospitalAssignment) {
         this.id = eventHospitalAssignment.getId();
-        this.hospital = eventHospitalAssignment.getHospital();
+        this.hospital = new HospitalDTO(eventHospitalAssignment.getHospital());
         this.status = eventHospitalAssignment.getStatus().name();
         this.createdAt = eventHospitalAssignment.getCreatedAt();
         this.updatedAt = eventHospitalAssignment.getUpdatedAt();

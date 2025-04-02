@@ -2,17 +2,17 @@ package com.aktic.indussahulatbackend.service.auth;
 
 import com.aktic.indussahulatbackend.model.common.UserBase;
 import com.aktic.indussahulatbackend.model.entity.*;
-import com.aktic.indussahulatbackend.model.request.AmbulanceDriverRegisterRequest;
-import com.aktic.indussahulatbackend.model.request.AmbulanceProviderRegisterRequest;
-import com.aktic.indussahulatbackend.model.request.AuthenticationRequest;
-import com.aktic.indussahulatbackend.model.request.PatientRegisterRequest;
+import com.aktic.indussahulatbackend.model.request.*;
 import com.aktic.indussahulatbackend.model.response.AuthenticationResponse;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderDTO;
+import com.aktic.indussahulatbackend.model.response.actor.HospitalAdminDTO;
 import com.aktic.indussahulatbackend.model.response.actor.PatientDTO;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProviderRepository;
 import com.aktic.indussahulatbackend.repository.company.CompanyRepository;
+import com.aktic.indussahulatbackend.repository.hospital.HospitalRepository;
+import com.aktic.indussahulatbackend.repository.hospitalAdmin.HospitalAdminRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.repository.role.RoleRepository;
 import com.aktic.indussahulatbackend.security.CustomUserDetailsService;
@@ -50,6 +50,8 @@ public class AuthService {
     private final AmbulanceProviderRepository ambulanceProviderRepository;
     private final CompanyRepository companyRepository;
     private final AmbulanceDriverRepository ambulanceDriverRepository;
+    private final HospitalAdminRepository hospitalAdminRepository;
+    private final HospitalRepository hospitalRepository;
     private final CustomUserDetailsService userDetailsService;
     private final UserDetailsServiceImpl userDetailsServiceImpl;
 
@@ -281,6 +283,81 @@ public class AuthService {
         } catch (Exception e) {
             log.error("Error occurred while getting current user", e);
             return null;
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<String>> hospitalAdminRegister(@Valid HospitalAdminRegisterRequest request) {
+        try{
+            // check if the hospital admin already exists with the given phone
+            Optional<HospitalAdmin> existingHospitalAdmin = hospitalAdminRepository.findByPhone(request.getPhone());
+            if(existingHospitalAdmin.isPresent()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Phone is already in use", null));
+            }
+
+            // verify if the hospital exists
+            Optional<Hospital> hospital = hospitalRepository.findById(request.getHospitalId());
+            if (hospital.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Hospital not found", null));
+            }
+
+            Role userRole = roleRepository.findByRoleName("ROLE_HOSPITAL_ADMIN");
+            if (userRole == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Role not found", null));
+            }
+
+            HospitalAdmin hospitalAdmin = HospitalAdmin.builder()
+                    .id(idGenerator.nextId())
+                    .hospital(hospital.get())
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .phone(request.getPhone())
+                    .email(request.getEmail())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .CNIC(request.getCNIC())
+                    .age(request.getAge())
+                    .role(userRole)
+                    .build();
+
+            hospitalAdminRepository.save(hospitalAdmin);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Hospital Admin registered successfully", null));
+        }catch (Exception e) {
+            log.error("Error occurred while registering ambulance driver", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Error", null));
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<AuthenticationResponse>> hospitalAdminLogin(@Valid AuthenticationRequest request) {
+        try{
+            Optional<HospitalAdmin> optionalHospitalAdmin = hospitalAdminRepository.findByPhone(request.getPhone());
+            if (optionalHospitalAdmin.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Phone not found", null));
+            }
+
+            HospitalAdmin hospitalAdmin = optionalHospitalAdmin.get();
+
+            try {
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                hospitalAdmin,
+                                request.getPassword()
+                        )
+                );
+            } catch (BadCredentialsException ex) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(false, "Invalid password", null));
+            }
+
+            String token = jwtService.generateToken(hospitalAdmin);
+
+            return ResponseEntity.ok(new ApiResponse<>(true, "User logged in successfully",
+                    new AuthenticationResponse(new HospitalAdminDTO(hospitalAdmin), token)));
+
+        }catch (Exception e) {
+            log.error("Error occurred while logging in", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(false, "Error", null));
         }
     }
 }

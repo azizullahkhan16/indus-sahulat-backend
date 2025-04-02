@@ -73,6 +73,16 @@ public class DataInitializerConfig {
                     roleRepository.save(ambulanceProviderRole);
                     log.info("AMBULANCE_PROVIDER role inserted successfully.");
                 }
+
+                if (!roleRepository.existsByRoleName("ROLE_HOSPITAL_ADMIN")) {
+                    Role hospitalAdminRole = Role.builder()
+                            .id(snowflakeIdGenerator.nextId())
+                            .roleName("ROLE_HOSPITAL_ADMIN")
+                            .description("This is a hospital admin role")
+                            .build();
+                    roleRepository.save(hospitalAdminRole);
+                    log.info("ROLE_HOSPITAL_ADMIN role inserted successfully.");
+                }
             } catch (Exception e) {
                 log.error("Error inserting roles: " + e.getMessage());
             }
