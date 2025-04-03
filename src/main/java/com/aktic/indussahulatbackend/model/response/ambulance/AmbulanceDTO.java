@@ -18,7 +18,7 @@ import java.time.Instant;
 public class AmbulanceDTO
 {
     private Long id;
-    private CompanyDTO companyDTO;
+    private CompanyDTO company;
     private String make;
     private String model;
     private String year;
@@ -32,7 +32,7 @@ public class AmbulanceDTO
     public AmbulanceDTO(Ambulance ambulance)
     {
         this.id = ambulance.getId();
-        this.companyDTO = new CompanyDTO(ambulance.getCompany());
+        this.company = new CompanyDTO(ambulance.getCompany());
         this.make = ambulance.getMake();
         this.model = ambulance.getModel();
         this.year = ambulance.getYear();

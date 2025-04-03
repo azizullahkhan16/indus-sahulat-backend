@@ -34,7 +34,7 @@ public class AmbulanceProviderAmbulanceController
 //    }
 
     @PostMapping("/assign-driver")
-    public ResponseEntity<ApiResponse<AmbulanceAssignmentDTO>> assignDriver(@RequestBody AmbulanceAssignmentRequest ambulanceAssignmentRequest)
+    public ResponseEntity<ApiResponse<AmbulanceAssignmentDTO>> assignDriver(@Valid @RequestBody AmbulanceAssignmentRequest ambulanceAssignmentRequest)
     {
         return ambulanceAssignmentService.assignDriver(ambulanceAssignmentRequest);
     }
