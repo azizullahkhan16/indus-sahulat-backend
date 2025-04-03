@@ -9,6 +9,7 @@ import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.AssignEventAmbulanceDTO;
 import com.aktic.indussahulatbackend.model.request.FormRequest;
+import com.aktic.indussahulatbackend.model.request.StatusRequestDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
@@ -22,6 +23,7 @@ import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -302,6 +304,28 @@ public class AmbulanceService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(false, e.getMessage(), null));
         } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "An unexpected error occurred", null));
+        }
+    }
+
+    public ResponseEntity<ApiResponse<EventAmbulanceAssignmentDTO>> getStatus(StatusRequestDTO statusRequestDTO) {
+        try {
+            Long id = statusRequestDTO.getEventAmbulanceAssignmentId();
+
+            EventAmbulanceAssignment eventAmbulanceAssignment = eventAmbulanceAssignmentRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Event ambulance assignment not found"));
+
+            EventAmbulanceAssignmentDTO eventAmbulanceAssignmentDTO = new EventAmbulanceAssignmentDTO(eventAmbulanceAssignment);
+
+            return new ResponseEntity<>(new ApiResponse<>(true,"Event Ambulance Assignment fetched successfully",eventAmbulanceAssignmentDTO),HttpStatus.OK);
+
+        } catch (NoSuchElementException e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+        catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "An unexpected error occurred", null));
