@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.model.response;
 
+import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.entity.Ambulance;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
@@ -21,6 +22,7 @@ public class AmbulanceAssignmentDTO {
     private AmbulanceDTO ambulance;
     private AmbulanceDriverDTO ambulanceDriver;
     private AmbulanceProviderDTO ambulanceProvider;
+    private Location driverLocation;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -29,6 +31,7 @@ public class AmbulanceAssignmentDTO {
         this.ambulance = new AmbulanceDTO(ambulanceAssignment.getAmbulance());
         this.ambulanceDriver = new AmbulanceDriverDTO(ambulanceAssignment.getAmbulanceDriver());
         this.ambulanceProvider = new AmbulanceProviderDTO(ambulanceAssignment.getAmbulanceProvider());
+        this.driverLocation = ambulanceAssignment.getDriverLocation();
         this.createdAt = ambulanceAssignment.getCreatedAt();
         this.updatedAt = ambulanceAssignment.getUpdatedAt();
     }

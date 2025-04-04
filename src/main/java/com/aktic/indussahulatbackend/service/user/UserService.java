@@ -1,11 +1,16 @@
 package com.aktic.indussahulatbackend.service.user;
 
+import com.aktic.indussahulatbackend.model.common.Location;
+import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
 import com.aktic.indussahulatbackend.model.entity.Patient;
+import com.aktic.indussahulatbackend.model.request.LocationDTO;
+import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderDTO;
 import com.aktic.indussahulatbackend.model.response.actor.PatientDTO;
+import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProviderRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
@@ -29,6 +34,7 @@ public class UserService {
     private final AmbulanceDriverRepository ambulanceDriverRepository;
     private final AmbulanceProviderRepository ambulanceProviderRepository;
     private final AuthService authService;
+    private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
 
     @Transactional
     public ResponseEntity<ApiResponse<PatientDTO>> getPatientInfo() {

@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.model.entity;
 
+import com.aktic.indussahulatbackend.model.common.Location;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,6 +38,13 @@ public class AmbulanceAssignment {
 
     @Column(name = "is_active")
     private Boolean isActive;
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "latitude", column = @Column(name = "driver_latitude")),
+            @AttributeOverride(name = "longitude", column = @Column(name = "driver_longitude"))
+    })
+    private Location driverLocation;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)

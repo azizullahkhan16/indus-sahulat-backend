@@ -4,11 +4,13 @@ import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceAssignm
 import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceNotFoundException;
 import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceProviderNotFoundException;
 import com.aktic.indussahulatbackend.exception.customexceptions.DriverNotFoundException;
+import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.entity.Ambulance;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
+import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
@@ -157,7 +159,27 @@ public class AmbulanceAssignmentService
         }
     }
 
-    public ResponseEntity<ApiResponse<EventAmbulanceAssignmentDTO>> assignAmbulance(Long eventId, AmbulanceAssignmentRequest ambulanceAssignmentRequest) {
-        return null;
+    @Transactional
+    public ResponseEntity<ApiResponse<AmbulanceAssignmentDTO>> updateDriverLocation(LocationDTO locationDTO) {
+        try{
+            // find active ambulance assignment for the diver
+            AmbulanceDriver driver = (AmbulanceDriver) authService.getCurrentUser();
+
+            AmbulanceAssignment ambulanceAssignment = ambulanceAssignmentRepository.findByAmbulanceDriverAndIsActiveTrue(driver);
+            if (ambulanceAssignment == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "No active ambulance assignment found", null));
+            }
+
+            // update the location of the driver
+            ambulanceAssignment.setDriverLocation(new Location(locationDTO.getLatitude(), locationDTO.getLongitude()));
+            ambulanceAssignment = ambulanceAssignmentRepository.save(ambulanceAssignment);
+
+            return ResponseEntity.ok(new ApiResponse<>(true, "Driver location updated successfully", new AmbulanceAssignmentDTO(ambulanceAssignment)));
+
+        }catch (Exception e) {
+            log.error("Error occurred while updating driver location: {}", e.getMessage());
+            return ResponseEntity.status(500).body(new ApiResponse<>(false, "Internal Server Error", null));
+        }
     }
 }
