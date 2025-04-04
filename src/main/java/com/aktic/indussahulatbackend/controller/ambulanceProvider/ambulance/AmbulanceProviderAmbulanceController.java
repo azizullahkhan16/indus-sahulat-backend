@@ -1,11 +1,7 @@
 package com.aktic.indussahulatbackend.controller.ambulanceProvider.ambulance;
 
-import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
-import com.aktic.indussahulatbackend.model.entity.EventAmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.model.request.AssignEventAmbulanceDTO;
-import com.aktic.indussahulatbackend.model.request.FormRequest;
-import com.aktic.indussahulatbackend.model.request.StatusRequestDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
@@ -82,9 +78,9 @@ public class AmbulanceProviderAmbulanceController
         return ambulanceService.assignAmbulance(eventAmbulanceAssignmentDTO);
     }
 
-    @GetMapping("/get-event-ambulance-assignment")
-    public ResponseEntity<ApiResponse<EventAmbulanceAssignmentDTO>> getEventAmbulanceAssignment(@Valid @RequestBody StatusRequestDTO statusRequestDTO){
-        return ambulanceService.getStatus(statusRequestDTO);
+    @GetMapping("/event-ambulance-assignment/{eventAmbulanceId}")
+    public ResponseEntity<ApiResponse<EventAmbulanceAssignmentDTO>> getEventAmbulanceAssignment(@PathVariable Long eventAmbulanceId){
+        return ambulanceService.getStatus(eventAmbulanceId);
     }
 }
 
