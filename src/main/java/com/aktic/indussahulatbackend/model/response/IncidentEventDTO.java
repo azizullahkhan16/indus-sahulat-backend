@@ -25,6 +25,7 @@ public class IncidentEventDTO {
     private EventHospitalAssignmentDTO eventHospitalAssignment;
     private Location pickupLocation;
     private Location dropoffLocation;
+    private String pickupAddress;
     private String status;
     private Instant pickupTime;
     private Instant dropOffTime;
@@ -39,6 +40,7 @@ public class IncidentEventDTO {
         this.eventAmbulanceAssignment = incidentEvent.getAmbulanceAssignment() != null ? new EventAmbulanceAssignmentDTO(incidentEvent.getAmbulanceAssignment()) : null;
         this.eventHospitalAssignment = incidentEvent.getHospitalAssignment() != null ? new EventHospitalAssignmentDTO(incidentEvent.getHospitalAssignment()) : null;
         this.pickupLocation = incidentEvent.getPickupLocation();
+        this.pickupAddress = incidentEvent.getPickupAddress();
         this.dropoffLocation = incidentEvent.getDropOffLocation();
         this.status = incidentEvent.getStatus().name();
         this.pickupTime = incidentEvent.getPickupTime();

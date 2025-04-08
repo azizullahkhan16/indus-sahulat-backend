@@ -48,6 +48,9 @@ public class IncidentEvent {
     })
     private Location pickupLocation;
 
+    @Column(name = "pickup_address")
+    private String pickupAddress;
+
     @Column(name = "pickup_time")
     private Instant pickupTime;  // Pickup time
 

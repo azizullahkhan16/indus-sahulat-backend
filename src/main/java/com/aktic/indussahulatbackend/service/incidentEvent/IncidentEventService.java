@@ -4,6 +4,7 @@ import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
+import com.aktic.indussahulatbackend.model.request.CreateEventDTO;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.request.UpdateAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
@@ -50,14 +51,16 @@ public class IncidentEventService {
     private final EventHospitalAssignmentRepository eventHospitalAssignmentRepository;
 
     @Transactional
-    public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(LocationDTO locationDTO) {
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(CreateEventDTO createEventDTO) {
         try{
             Patient patient = (Patient) authService.getCurrentUser();
 
             IncidentEvent event = IncidentEvent.builder()
                     .id(idGenerator.nextId())
                     .patient(patient)
-                    .pickupLocation(new Location(locationDTO.getLatitude(), locationDTO.getLongitude()))
+                    .pickupLocation(new Location(createEventDTO.getLocation().getLatitude(),
+                            createEventDTO.getLocation().getLongitude()))
+                    .pickupAddress(createEventDTO.getAddress())
                     .build();
 
             IncidentEvent incidentEvent = incidentEventRepository.save(event);

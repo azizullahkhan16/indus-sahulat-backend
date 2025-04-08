@@ -1,6 +1,7 @@
 package com.aktic.indussahulatbackend.controller.patient.event;
 
 import com.aktic.indussahulatbackend.model.entity.IncidentEvent;
+import com.aktic.indussahulatbackend.model.request.CreateEventDTO;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.service.incidentEvent.IncidentEventService;
@@ -24,9 +25,9 @@ public class PatientEventController
 
     @PostMapping("/create-event")
     public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(
-            @Valid @RequestBody LocationDTO locationDTO
+            @Valid @RequestBody CreateEventDTO createEventDTO
             ) {
-        return incidentEventService.createEvent(locationDTO);
+        return incidentEventService.createEvent(createEventDTO);
     }
 
     @GetMapping("/get-active-event")
