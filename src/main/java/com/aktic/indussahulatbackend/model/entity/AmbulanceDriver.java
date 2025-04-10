@@ -14,6 +14,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -49,8 +50,8 @@ public class AmbulanceDriver implements UserBase {
     @Column(name = "phone", unique = true, nullable = false)
     private String phone;
 
-    @Column(name = "age", nullable = false)
-    private Integer age;
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
 
     @Column(name = "image")
     private String image;

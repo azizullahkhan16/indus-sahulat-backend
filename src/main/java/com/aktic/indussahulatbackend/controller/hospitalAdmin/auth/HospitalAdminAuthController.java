@@ -1,8 +1,7 @@
 package com.aktic.indussahulatbackend.controller.hospitalAdmin.auth;
 
-import com.aktic.indussahulatbackend.model.request.AmbulanceDriverRegisterRequest;
 import com.aktic.indussahulatbackend.model.request.AuthenticationRequest;
-import com.aktic.indussahulatbackend.model.request.HospitalAdminRegisterRequest;
+import com.aktic.indussahulatbackend.model.request.actor.HospitalAdminRegisterDTO;
 import com.aktic.indussahulatbackend.model.response.AuthenticationResponse;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
@@ -22,7 +21,7 @@ public class HospitalAdminAuthController {
 
     @PostMapping(value = "/register")
     public ResponseEntity<ApiResponse<String>> hospitalAdminRegister(
-            @Valid @RequestBody HospitalAdminRegisterRequest request
+            @Valid @RequestBody HospitalAdminRegisterDTO request
     ) {
         return service.hospitalAdminRegister(request);
     }

@@ -1,7 +1,7 @@
 package com.aktic.indussahulatbackend.controller.ambulanceProvider.auth;
 
 
-import com.aktic.indussahulatbackend.model.request.AmbulanceProviderRegisterRequest;
+import com.aktic.indussahulatbackend.model.request.actor.AmbulanceProviderRegisterDTO;
 import com.aktic.indussahulatbackend.model.request.AuthenticationRequest;
 import com.aktic.indussahulatbackend.model.response.AuthenticationResponse;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
@@ -23,7 +23,7 @@ public class AmbulanceProviderAuthController {
 
     @PostMapping(value = "/register")
     public ResponseEntity<ApiResponse<String>> ambulanceProviderRegister(
-            @Valid @RequestBody AmbulanceProviderRegisterRequest request
+            @Valid @RequestBody AmbulanceProviderRegisterDTO request
     ) {
         return service.ambulanceProviderRegister(request);
     }

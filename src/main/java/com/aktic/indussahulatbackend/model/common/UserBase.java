@@ -3,6 +3,7 @@ package com.aktic.indussahulatbackend.model.common;
 import com.aktic.indussahulatbackend.model.entity.Role;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 public interface UserBase {
     Long getId();
@@ -17,5 +18,5 @@ public interface UserBase {
     Instant getCreatedAt();
     Instant getUpdatedAt();
     String getImage();
-    Integer getAge();
+    LocalDate getDateOfBirth();
 }

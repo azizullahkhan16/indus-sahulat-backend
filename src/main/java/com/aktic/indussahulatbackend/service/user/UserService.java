@@ -1,18 +1,17 @@
 package com.aktic.indussahulatbackend.service.user;
 
 import com.aktic.indussahulatbackend.model.common.Location;
-import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
-import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
-import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
-import com.aktic.indussahulatbackend.model.entity.Patient;
+import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderDTO;
+import com.aktic.indussahulatbackend.model.response.actor.HospitalAdminDTO;
 import com.aktic.indussahulatbackend.model.response.actor.PatientDTO;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProviderRepository;
+import com.aktic.indussahulatbackend.repository.hospitalAdmin.HospitalAdminRepository;
 import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
@@ -33,8 +32,8 @@ public class UserService {
     private final PatientRepository patientRepository;
     private final AmbulanceDriverRepository ambulanceDriverRepository;
     private final AmbulanceProviderRepository ambulanceProviderRepository;
+    private final HospitalAdminRepository hospitalAdminRepository;
     private final AuthService authService;
-    private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
 
     @Transactional
     public ResponseEntity<ApiResponse<PatientDTO>> getPatientInfo() {
@@ -93,6 +92,24 @@ public class UserService {
                     .body(new ApiResponse<>(false, e.getMessage(), null));
         }catch (Exception e) {
             log.error("Error occurred while fetching ambulance driver info: {}", e.getMessage());
+            return ResponseEntity.status(500).body(new ApiResponse<>(false, "Internal Server Error", null));
+        }
+    }
+
+    public ResponseEntity<ApiResponse<HospitalAdminDTO>> getHospitalAdminInfo() {
+        try{
+            HospitalAdmin currentUser = (HospitalAdmin) authService.getCurrentUser();
+
+            HospitalAdmin currentHospitalAdmin = hospitalAdminRepository.findById(currentUser.getId())
+                    .orElseThrow(() -> new NoSuchElementException("Hospital Admin not found"));
+
+            return ResponseEntity.ok(new ApiResponse<>(true, "Hospital Admin info fetched successfully", new HospitalAdminDTO(currentHospitalAdmin)));
+        }catch (NoSuchElementException e) {
+            log.error("Validation error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }catch (Exception e) {
+            log.error("Error occurred while fetching hospital admin info: {}", e.getMessage());
             return ResponseEntity.status(500).body(new ApiResponse<>(false, "Internal Server Error", null));
         }
     }

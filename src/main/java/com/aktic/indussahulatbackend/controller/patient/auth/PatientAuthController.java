@@ -1,7 +1,7 @@
 package com.aktic.indussahulatbackend.controller.patient.auth;
 
 import com.aktic.indussahulatbackend.model.request.AuthenticationRequest;
-import com.aktic.indussahulatbackend.model.request.PatientRegisterRequest;
+import com.aktic.indussahulatbackend.model.request.actor.PatientRegisterDTO;
 import com.aktic.indussahulatbackend.model.response.AuthenticationResponse;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
@@ -22,7 +22,7 @@ public class PatientAuthController {
 
     @PostMapping(value = "/register")
     public ResponseEntity<ApiResponse<String>> patientRegister(
-            @Valid @RequestBody PatientRegisterRequest request
+            @Valid @RequestBody PatientRegisterDTO request
     ) {
         return service.patientRegister(request);
     }

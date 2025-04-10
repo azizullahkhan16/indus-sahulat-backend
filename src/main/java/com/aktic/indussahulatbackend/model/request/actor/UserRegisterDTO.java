@@ -1,20 +1,16 @@
-package com.aktic.indussahulatbackend.model.request;
+package com.aktic.indussahulatbackend.model.request.actor;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class AmbulanceDriverRegisterRequest {
-
-    @NotNull(message = "Company ID is required")
-    private Long companyId;
-
+public class UserRegisterDTO {
     @NotBlank(message = "First name is required")
     @Size(max = 50, message = "First name must be at most 50 characters")
     private String firstName;
@@ -39,8 +35,7 @@ public class AmbulanceDriverRegisterRequest {
 //    @Pattern(regexp = "\\+92\\d{10}", message = "Phone number must be in format +92XXXXXXXXXX")
     private String phone;
 
-    @NotNull(message = "Age is required")
-    @Min(value = 1, message = "Age must be at least 1 year")
-    private Integer age;
-
+    @NotNull(message = "Date of birth is required")
+    @PastOrPresent(message = "Date of birth must be in the past or present")
+    private LocalDate dateOfBirth;
 }

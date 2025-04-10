@@ -3,6 +3,10 @@ package com.aktic.indussahulatbackend.service.auth;
 import com.aktic.indussahulatbackend.model.common.UserBase;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.request.*;
+import com.aktic.indussahulatbackend.model.request.actor.AmbulanceDriverRegisterDTO;
+import com.aktic.indussahulatbackend.model.request.actor.AmbulanceProviderRegisterDTO;
+import com.aktic.indussahulatbackend.model.request.actor.HospitalAdminRegisterDTO;
+import com.aktic.indussahulatbackend.model.request.actor.PatientRegisterDTO;
 import com.aktic.indussahulatbackend.model.response.AuthenticationResponse;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceDriverDTO;
 import com.aktic.indussahulatbackend.model.response.actor.AmbulanceProviderDTO;
@@ -56,7 +60,7 @@ public class AuthService {
     private final UserDetailsServiceImpl userDetailsServiceImpl;
 
     @Transactional
-    public ResponseEntity<ApiResponse<String>> patientRegister(PatientRegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> patientRegister(PatientRegisterDTO request) {
         try{
             // check if the patient already exists with the given phone
             Optional<Patient> existingPatient = patientRepository.findByPhone(request.getPhone());
@@ -81,7 +85,7 @@ public class AuthService {
                     .height(request.getHeight())
                     .bloodType(request.getBloodType())
                     .gender(request.getGender())
-                    .age(request.getAge())
+                    .dateOfBirth(request.getDateOfBirth())
                     .role(userRole)
                     .build();
 
@@ -127,7 +131,7 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<String>> ambulanceProviderRegister(@Valid AmbulanceProviderRegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> ambulanceProviderRegister(@Valid AmbulanceProviderRegisterDTO request) {
         try{
             // check if the ambulance provider already exists with the given phone
             Optional<AmbulanceProvider> existingAmbulanceProvider = ambulanceProviderRepository.findByPhone(request.getPhone());
@@ -155,7 +159,7 @@ public class AuthService {
                     .email(request.getEmail())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .CNIC(request.getCNIC())
-                    .age(request.getAge())
+                    .dateOfBirth(request.getDateOfBirth())
                     .role(userRole)
                     .build();
 
@@ -202,7 +206,7 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<String>> ambulanceDriverRegister(@Valid AmbulanceDriverRegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> ambulanceDriverRegister(@Valid AmbulanceDriverRegisterDTO request) {
         try{
             // check if the ambulance drvier already exists with the given phone
             Optional<AmbulanceDriver> existingAmbulanceDriver = ambulanceDriverRepository.findByPhone(request.getPhone());
@@ -230,7 +234,7 @@ public class AuthService {
                     .email(request.getEmail())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .CNIC(request.getCNIC())
-                    .age(request.getAge())
+                    .dateOfBirth(request.getDateOfBirth())
                     .role(userRole)
                     .build();
 
@@ -287,7 +291,7 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<String>> hospitalAdminRegister(@Valid HospitalAdminRegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> hospitalAdminRegister(@Valid HospitalAdminRegisterDTO request) {
         try{
             // check if the hospital admin already exists with the given phone
             Optional<HospitalAdmin> existingHospitalAdmin = hospitalAdminRepository.findByPhone(request.getPhone());
@@ -315,7 +319,7 @@ public class AuthService {
                     .email(request.getEmail())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .CNIC(request.getCNIC())
-                    .age(request.getAge())
+                    .dateOfBirth(request.getDateOfBirth())
                     .role(userRole)
                     .build();
 

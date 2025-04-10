@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 
 @Data
@@ -23,7 +24,7 @@ public class UserDTO {
     private Instant updatedAt;
     private String role;
     private String image;
-    private Integer age;
+    private LocalDate dateOfBirth;
 
     public UserDTO(UserBase user) {
         this.id = user.getId();
@@ -37,7 +38,7 @@ public class UserDTO {
         this.updatedAt = user.getUpdatedAt();
         this.role = user.getRole().getRoleName();
         this.image = user.getImage();
-        this.age = user.getAge();
+        this.dateOfBirth = user.getDateOfBirth();
 
     }
 }

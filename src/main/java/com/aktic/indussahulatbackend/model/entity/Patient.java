@@ -15,6 +15,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -60,8 +61,8 @@ public class Patient implements UserBase {
     @Enumerated(EnumType.STRING)
     private GenderType gender;
 
-    @Column(name = "age", nullable = false)
-    private Integer age;
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
 
     @Column(name = "image")
     private String image;
