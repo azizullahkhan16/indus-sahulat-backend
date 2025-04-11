@@ -16,4 +16,5 @@ public interface EventAmbulanceAssignmentRepository extends JpaRepository<EventA
 
     Optional<EventAmbulanceAssignment> findByAmbulanceAssignment(AmbulanceAssignment assignment);
 
+    Optional<EventAmbulanceAssignment> findByAmbulanceAssignmentAndStatus(AmbulanceAssignment ambulanceAssignment, RequestStatus requestStatus);
 }

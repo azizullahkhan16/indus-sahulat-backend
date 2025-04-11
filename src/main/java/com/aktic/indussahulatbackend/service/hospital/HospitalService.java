@@ -80,4 +80,20 @@ public class HospitalService
               return new ResponseEntity<>(new ApiResponse<>(false, "Failed to send admit request", null), HttpStatus.INTERNAL_SERVER_ERROR);
        }
     }
+
+    public ResponseEntity<ApiResponse<EventHospitalAssignmentDTO>> getAdmitRequestInfo(Long eventHospitalAssignmentId) {
+        try{
+            EventHospitalAssignment eventHospitalAssignment = eventHospitalAssignmentRepository.findById(eventHospitalAssignmentId)
+                    .orElseThrow(() -> new NoSuchElementException("Admit request not found"));
+
+            return new ResponseEntity<>(new ApiResponse<>(true, "Admit request fetched successfully", new EventHospitalAssignmentDTO(eventHospitalAssignment)), HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            log.error("Error occurred while fetching admit request info: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, e.getMessage(), null), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            log.error("Error occurred while fetching admit request info: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, "Failed to fetch admit request info", null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
 }

@@ -33,6 +33,11 @@ public class AmbulanceDriverEventController {
         return incidentEventService.updateAmbulanceAssignment(eventAmbulanceAssignmentId, updateAssignmentDTO);
     }
 
+    @GetMapping("/active-event")
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> getDriverActiveEvent() {
+        return incidentEventService.getDriverActiveEvent();
+    }
+
     @PatchMapping("/driver-arrived/{eventId}")
     public ResponseEntity<ApiResponse<IncidentEventDTO>> driverArrivedAtPickup(@PathVariable Long eventId) {
         return incidentEventService.driverArrivedAtPickup(eventId);

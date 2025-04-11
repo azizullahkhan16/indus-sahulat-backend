@@ -36,4 +36,11 @@ public class HospitalAdminEventController {
             ) {
         return eventService.updateHospitalAssignment(eventHospitalAssignmentId, updateAssignmentDTO);
     }
+
+    @GetMapping("/admit-request/{eventHospitalAssignmentId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAdmitRequestById(
+            @PathVariable Long eventHospitalAssignmentId
+    ) {
+        return eventService.getAdmitRequestById(eventHospitalAssignmentId);
+    }
 }

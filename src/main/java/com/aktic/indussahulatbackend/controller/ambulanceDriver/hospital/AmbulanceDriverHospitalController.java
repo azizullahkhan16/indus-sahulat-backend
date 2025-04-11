@@ -33,4 +33,12 @@ public class AmbulanceDriverHospitalController
     {
         return hospitalService.sendAdmitRequest(sendAdmitRequestDTO);
     }
+
+    @GetMapping("/get-admit-request/{eventHospitalAssignmentId}")
+    public ResponseEntity<ApiResponse<EventHospitalAssignmentDTO>> getAdmitRequest(
+            @PathVariable Long eventHospitalAssignmentId
+            )
+    {
+        return hospitalService.getAdmitRequestInfo(eventHospitalAssignmentId);
+    }
 }

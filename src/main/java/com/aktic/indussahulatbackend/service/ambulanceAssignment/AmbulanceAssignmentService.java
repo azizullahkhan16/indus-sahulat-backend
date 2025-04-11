@@ -54,9 +54,9 @@ public class AmbulanceAssignmentService
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
             Long providerId = ambulanceProvider.getId();
             AmbulanceProvider provider = ambulanceProviderRepository.findById(providerId).orElseThrow(()-> new AmbulanceProviderNotFoundException(AmbulanceProviderNotFoundException.DEFAULT_MESSAGE));
-            Long ambulanceId = ambulanceAssignmentRequest.getAmbulance_id();
+            Long ambulanceId = ambulanceAssignmentRequest.getAmbulanceId();
             Ambulance ambulance = ambulanceRepository.findById(ambulanceId).orElseThrow(()-> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
-            Long driverId = ambulanceAssignmentRequest.getDriver_id();
+            Long driverId = ambulanceAssignmentRequest.getDriverId();
             AmbulanceDriver driver = ambulanceDriverRepository.findById(driverId).orElseThrow(()-> new DriverNotFoundException(DriverNotFoundException.DEFAULT_MESSAGE));
             if (!ambulanceProvider.getCompany().getId().equals(driver.getCompany().getId()) || !ambulanceProvider.getCompany().getId().equals(ambulance.getCompany().getId()))
             {

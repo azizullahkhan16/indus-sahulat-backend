@@ -8,8 +8,8 @@ import lombok.Data;
 public class AmbulanceAssignmentRequest
 {
     @NotNull(message = "Ambulance ID cannot be null")
-    private Long ambulance_id;
+    private Long ambulanceId;
 
     @NotNull(message = "Driver ID cannot be null")
-    private Long driver_id;
+    private Long driverId;
 }

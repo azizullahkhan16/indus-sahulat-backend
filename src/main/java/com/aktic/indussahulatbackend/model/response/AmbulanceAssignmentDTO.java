@@ -23,6 +23,7 @@ public class AmbulanceAssignmentDTO {
     private AmbulanceDriverDTO ambulanceDriver;
     private AmbulanceProviderDTO ambulanceProvider;
     private Location driverLocation;
+    private Boolean isActive;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -32,6 +33,7 @@ public class AmbulanceAssignmentDTO {
         this.ambulanceDriver = new AmbulanceDriverDTO(ambulanceAssignment.getAmbulanceDriver());
         this.ambulanceProvider = new AmbulanceProviderDTO(ambulanceAssignment.getAmbulanceProvider());
         this.driverLocation = ambulanceAssignment.getDriverLocation();
+        this.isActive = ambulanceAssignment.getIsActive();
         this.createdAt = ambulanceAssignment.getCreatedAt();
         this.updatedAt = ambulanceAssignment.getUpdatedAt();
     }

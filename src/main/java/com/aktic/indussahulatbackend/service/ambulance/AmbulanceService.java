@@ -1,8 +1,10 @@
 package com.aktic.indussahulatbackend.service.ambulance;
 
 import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceNotFoundException;
+import com.aktic.indussahulatbackend.model.common.eventState.AmbulanceAssignedState;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
+import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.AssignEventAmbulanceDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
@@ -220,8 +222,9 @@ public class AmbulanceService {
                 IncidentEvent event = eventAssignment.get().getEvent();
 
                 // If event is completed or cancelled, ambulance is available
-                if (event.getStatus() == EventStatus.PATIENT_ADMITTED ||
-                        event.getStatus() == EventStatus.CANCELLED) {
+                if (event.getStatus() == EventStatus.PATIENT_ADMITTED
+                        || event.getStatus() == EventStatus.CANCELLED
+                        || eventAssignment.get().getStatus() == RequestStatus.REJECTED) {
                     availableAmbulances.add(new AmbulanceAssignmentDTO(assignment));
                 }
             }
@@ -246,10 +249,6 @@ public class AmbulanceService {
             IncidentEvent event = incidentEventRepository.findById(eventAmbulanceAssignmentDTO.getEventId())
                     .orElseThrow(() -> new NoSuchElementException("Event not found."));
 
-            if (event.getStatus() != EventStatus.CREATED) {
-                throw new IllegalStateException("Ambulance can only be assigned to events with CREATED status");
-            }
-
             if(event.getAmbulanceAssignment() != null) {
                 throw new IllegalStateException("Ambulance is already assigned to this event");
             }
@@ -264,22 +263,23 @@ public class AmbulanceService {
 
             if (existingAssignment.isPresent()) {
                 IncidentEvent assignedEvent = existingAssignment.get().getEvent();
-                if (assignedEvent.getStatus() != EventStatus.PATIENT_ADMITTED &&
-                        assignedEvent.getStatus() != EventStatus.CANCELLED) {
+                if (assignedEvent.getStatus() != EventStatus.PATIENT_ADMITTED
+                        && assignedEvent.getStatus() != EventStatus.CANCELLED
+                        && existingAssignment.get().getStatus() != RequestStatus.REJECTED) {
                     throw new IllegalStateException("Ambulance is already assigned to an active event");
                 }
             }
+
+            event.nextState(new AmbulanceAssignedState());
 
             // Create new event ambulance assignment
             EventAmbulanceAssignment eventAmbulanceAssignment = EventAmbulanceAssignment.builder()
                     .id(idGenerator.nextId())
                     .event(event)
+                    .ambulanceProvider(ambulanceProvider)
                     .ambulanceAssignment(ambulanceAssignment)
                     .build();
 
-            // Save the assignment
-            eventAmbulanceAssignment.getEvent().setStatus(EventStatus.AMBULANCE_ASSIGNED);
-            eventAmbulanceAssignment.getEvent().setAmbulanceProvider(ambulanceProvider);
             EventAmbulanceAssignment savedAssignment = eventAmbulanceAssignmentRepository.save(eventAmbulanceAssignment);
 
             return ResponseEntity.ok(

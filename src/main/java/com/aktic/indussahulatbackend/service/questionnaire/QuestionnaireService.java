@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.service.questionnaire;
 
+import com.aktic.indussahulatbackend.model.common.eventState.QuestionnaireFilledState;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.request.AnswerDTO;
 import com.aktic.indussahulatbackend.model.request.SaveResponseDTO;
@@ -106,8 +107,10 @@ public class QuestionnaireService {
                 responsesToSave.add(responseEntity);
             }
 
+            event.nextState(new QuestionnaireFilledState());
             // Save All Responses
             responseRepository.saveAll(responsesToSave);
+            incidentEventRepository.save(event);
 
             return ResponseEntity.ok(new ApiResponse<>(true, "Responses saved successfully", null));
 

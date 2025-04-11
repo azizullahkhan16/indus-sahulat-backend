@@ -31,8 +31,8 @@ public class PatientEventController
     }
 
     @GetMapping("/get-active-event")
-    public ResponseEntity<ApiResponse<IncidentEventDTO>> getActiveEvent() {
-        return incidentEventService.getActiveEvent();
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> getPatientActiveEvent() {
+        return incidentEventService.getPatientActiveEvent();
     }
 
     @PatchMapping("/cancel-event/{eventId}")

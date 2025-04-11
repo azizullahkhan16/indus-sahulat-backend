@@ -29,6 +29,10 @@ public class EventAmbulanceAssignment {
     private AmbulanceAssignment ambulanceAssignment;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "ambulance_provider_id", nullable = false)
+    private AmbulanceProvider ambulanceProvider;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false, updatable = false)
     private IncidentEvent event;
 

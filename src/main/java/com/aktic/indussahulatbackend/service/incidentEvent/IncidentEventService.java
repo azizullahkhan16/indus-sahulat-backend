@@ -1,6 +1,7 @@
 package com.aktic.indussahulatbackend.service.incidentEvent;
 
 import com.aktic.indussahulatbackend.model.common.Location;
+import com.aktic.indussahulatbackend.model.common.eventState.*;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
@@ -55,6 +56,20 @@ public class IncidentEventService {
         try{
             Patient patient = (Patient) authService.getCurrentUser();
 
+            // Check if the patient already has an active event
+            Optional<IncidentEvent> existingEvent = incidentEventRepository
+                    .findFirstByPatientAndStatusNotIn(
+                            patient,
+                            Arrays.asList(EventStatus.PATIENT_ADMITTED, EventStatus.CANCELLED),
+                            Sort.by("createdAt").descending()
+                    );
+
+            if (existingEvent.isPresent()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "Patient already has an active event", null));
+            }
+
+
             IncidentEvent event = IncidentEvent.builder()
                     .id(idGenerator.nextId())
                     .patient(patient)
@@ -64,6 +79,7 @@ public class IncidentEventService {
                     .build();
 
             IncidentEvent incidentEvent = incidentEventRepository.save(event);
+            System.out.println(incidentEvent);
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Event created successfully", new IncidentEventDTO(incidentEvent)), HttpStatus.CREATED);
         }catch(Exception e) {
@@ -80,7 +96,7 @@ public class IncidentEventService {
 
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-            Page<IncidentEvent> activeEvents = incidentEventRepository.findByStatus(EventStatus.CREATED, pageable);
+            Page<IncidentEvent> activeEvents = incidentEventRepository.findByStatus(EventStatus.QUESTIONNAIRE_FILLED, pageable);
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Active events fetched successfully", activeEvents.map(IncidentEventDTO::new)), HttpStatus.OK);
 
@@ -139,7 +155,8 @@ public class IncidentEventService {
 
             // Find the active event ambulance assignment
             Optional<EventAmbulanceAssignment> eventAssignmentOpt =
-                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignment(ambulanceAssignment);
+                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatus(
+                            ambulanceAssignment, RequestStatus.REQUESTED);
 
             if (eventAssignmentOpt.isEmpty() || eventAssignmentOpt.get().getEvent().getStatus() == EventStatus.CANCELLED ||
                     eventAssignmentOpt.get().getEvent().getStatus() == EventStatus.PATIENT_ADMITTED) {
@@ -183,13 +200,17 @@ public class IncidentEventService {
                         .body(new ApiResponse<>(false, "No active event assigned to this ambulance", null));
             }
 
-            eventAssignment.setStatus(RequestStatus.valueOf(updateAssignmentDTO.getStatus()));
             // Update the status of the assignment
             if(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())) {
-                eventAssignment.getEvent().setStatus(EventStatus.DRIVER_ACCEPTED);
+                eventAssignment.getEvent().nextState(new DriverAcceptedState());
                 eventAssignment.getEvent().setAmbulanceAssignment(eventAssignment);
-//                incidentEventRepository.save(eventAssignment.getEvent());
+                eventAssignment.getEvent().setAmbulanceProvider(eventAssignment.getAmbulanceProvider());
+            }else if(updateAssignmentDTO.getStatus().equals(RequestStatus.REJECTED.name())) {
+                eventAssignment.getEvent().nextState(new QuestionnaireFilledState());
             }
+
+            eventAssignment.setStatus(RequestStatus.valueOf(updateAssignmentDTO.getStatus()));
+
             EventAmbulanceAssignment updatedEventAssignment = eventAmbulanceAssignmentRepository.save(eventAssignment);
 
             return ResponseEntity.ok(
@@ -203,7 +224,7 @@ public class IncidentEventService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<IncidentEventDTO>> getActiveEvent() {
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> getPatientActiveEvent() {
         try {
             // Get the current authenticated patient
             Patient patient = (Patient) authService.getCurrentUser();
@@ -238,12 +259,6 @@ public class IncidentEventService {
             IncidentEvent incidentEvent = incidentEventRepository.findById(eventId)
                     .orElseThrow(() -> new NoSuchElementException("Event not found"));
 
-            // Check if the event is in the correct status
-            if (incidentEvent.getStatus() != EventStatus.DRIVER_ACCEPTED) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ApiResponse<>(false, "Event is not in the correct status", null));
-            }
-
             // Check if there’s an assignment and the driver is authorized
             EventAmbulanceAssignment eventAmbulanceAssignment = incidentEvent.getAmbulanceAssignment();
             if (eventAmbulanceAssignment == null || eventAmbulanceAssignment.getAmbulanceAssignment() == null) {
@@ -258,7 +273,7 @@ public class IncidentEventService {
             }
 
             // Update the event status
-            incidentEvent.setStatus(EventStatus.DRIVER_ARRIVED);
+            incidentEvent.nextState(new DriverArrivedState());
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
             return ResponseEntity.ok(
@@ -331,14 +346,15 @@ public class IncidentEventService {
             eventAssignment.setStatus(RequestStatus.valueOf(updateAssignmentDTO.getStatus()));
             // Update the status of the assignment
             if(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())) {
-                eventAssignment.getEvent().setStatus(EventStatus.HOSPITAL_ASSIGNED);
+                eventAssignment.getEvent().nextState(new HospitalAssignedState());
                 eventAssignment.getEvent().setHospitalAssignment(eventAssignment);
                 eventAssignment.getEvent().setDropOffLocation(eventAssignment.getHospital().getAddress());
             }
+
             EventHospitalAssignment updatedEventAssignment = eventHospitalAssignmentRepository.save(eventAssignment);
 
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Hospital assigned successfully", new IncidentEventDTO(updatedEventAssignment.getEvent()))
+                    new ApiResponse<>(true, "Admit Request Updated Successfully", new IncidentEventDTO(updatedEventAssignment.getEvent()))
             );
 
         }catch (NoSuchElementException e) {
@@ -356,12 +372,6 @@ public class IncidentEventService {
             IncidentEvent incidentEvent = incidentEventRepository.findById(eventId)
                     .orElseThrow(() -> new NoSuchElementException("Event not found"));
 
-            // Check if the event is in the correct status
-            if (incidentEvent.getStatus() != EventStatus.HOSPITAL_ASSIGNED) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ApiResponse<>(false, "Event is not in the correct status", null));
-            }
-
             // Check if there’s an assignment and the driver is authorized
             EventAmbulanceAssignment eventAmbulanceAssignment = incidentEvent.getAmbulanceAssignment();
             if (eventAmbulanceAssignment == null || eventAmbulanceAssignment.getAmbulanceAssignment() == null) {
@@ -376,7 +386,7 @@ public class IncidentEventService {
             }
 
             // Update the event status
-            incidentEvent.setStatus(EventStatus.PATIENT_PICKED);
+            incidentEvent.nextState(new PatientPickedState());
             incidentEvent.setPickupTime(Instant.now());
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
@@ -399,12 +409,6 @@ public class IncidentEventService {
             IncidentEvent incidentEvent = incidentEventRepository.findById(eventId)
                     .orElseThrow(() -> new NoSuchElementException("Event not found"));
 
-            // Check if the event is in the correct status
-            if (incidentEvent.getStatus() != EventStatus.PATIENT_PICKED) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ApiResponse<>(false, "Event is not in the correct status", null));
-            }
-
             // Check if there’s an assignment and the driver is authorized
             EventAmbulanceAssignment eventAmbulanceAssignment = incidentEvent.getAmbulanceAssignment();
             if (eventAmbulanceAssignment == null || eventAmbulanceAssignment.getAmbulanceAssignment() == null) {
@@ -419,7 +423,7 @@ public class IncidentEventService {
             }
 
             // Update the event status
-            incidentEvent.setStatus(EventStatus.PATIENT_ADMITTED);
+            incidentEvent.nextState(new PatientAdmittedState());
             incidentEvent.setDropOffTime(Instant.now());
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
@@ -489,21 +493,13 @@ public class IncidentEventService {
             IncidentEvent incidentEvent = incidentEventRepository.findById(eventId)
                     .orElseThrow(() -> new NoSuchElementException("Event not found"));
 
-            // Check if the event is in the correct status
-            if (incidentEvent.getStatus() == EventStatus.PATIENT_ADMITTED
-                    || incidentEvent.getStatus() == EventStatus.CANCELLED
-            ) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ApiResponse<>(false, "Event is not in the correct status", null));
-            }
-
             if(!Objects.equals(incidentEvent.getPatient().getId(), patient.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new ApiResponse<>(false, "You are not authorized to update this event", null));
             }
 
             // Update the event status
-            incidentEvent.setStatus(EventStatus.CANCELLED);
+            incidentEvent.cancelEvent();
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
             return ResponseEntity.ok(
@@ -513,9 +509,77 @@ public class IncidentEventService {
         }catch (NoSuchElementException e) {
             log.error("Event not found: {}", e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>(false, "Event not found", null), HttpStatus.NOT_FOUND);
+        } catch (IllegalStateException e) {
+            log.error("Event cannot be cancelled: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, e.getMessage(), null), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             log.error("Error updating assignment: {}", e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>(false, "Error updating assignment", null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> getDriverActiveEvent() {
+        try{
+            AmbulanceDriver ambulanceDriver = (AmbulanceDriver) authService.getCurrentUser();
+
+            // Find the active event ambulance assignment for this driver
+            AmbulanceAssignment ambulanceAssignment =
+                    ambulanceAssignmentRepository.findByAmbulanceDriverAndIsActiveTrue(ambulanceDriver);
+            if(ambulanceAssignment == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "No active ambulance assignment found for driver", null));
+            }
+
+            Optional<EventAmbulanceAssignment> eventAssignmentOpt =
+                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatus(
+                            ambulanceAssignment, RequestStatus.ACCEPTED);
+            if (eventAssignmentOpt.isEmpty()
+                    || eventAssignmentOpt.get().getEvent().getStatus() == EventStatus.CANCELLED
+                    || eventAssignmentOpt.get().getEvent().getStatus() == EventStatus.PATIENT_ADMITTED) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "No active event assigned to this ambulance", null));
+            }
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, "Active event retrieved successfully", new IncidentEventDTO(eventAssignmentOpt.get().getEvent()))
+            );
+
+        }catch (Exception e) {
+            log.error("Error fetching active event: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, "Error fetching active event", null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAdmitRequestById(Long eventHospitalAssignmentId) {
+        try{
+            // Get the current authenticated HospitalAdmin
+            HospitalAdmin hospitalAdmin = (HospitalAdmin) authService.getCurrentUser();
+
+            EventHospitalAssignment eventHospitalAssignment = eventHospitalAssignmentRepository
+                    .findByIdAndHospital(eventHospitalAssignmentId, hospitalAdmin.getHospital())
+                    .orElseThrow(() -> new NoSuchElementException("Event hospital assignment not found"));
+
+            // extract the responses from the incidentEvent
+            List<Response> responses = responseRepository.findByEvent(eventHospitalAssignment.getEvent());
+
+            // map responses to DTOs if needed
+            List<ResponseDTO> patientResponse = responses.stream()
+                    .map(ResponseDTO::new)
+                    .collect(Collectors.toList());
+
+            Map<String, Object> responseMap = Map.of(
+                    "event", new IncidentEventDTO(eventHospitalAssignment.getEvent()),
+                    "eventHospitalAssignment", new EventHospitalAssignmentDTO(eventHospitalAssignment),
+                    "patientResponse", patientResponse
+            );
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, "Admit request fetched successfully", responseMap)
+            );
+
+        }catch (Exception e) {
+            log.error("Error fetching admit request: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, "Error fetching admit request", null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
