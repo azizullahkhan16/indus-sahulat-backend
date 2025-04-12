@@ -201,16 +201,25 @@ public class AmbulanceService {
     @Transactional
     public ResponseEntity<ApiResponse<List<AmbulanceAssignmentDTO>>> getAvailableAmbulances(Long eventId) {
         try {
-            // 1. Get all ambulance assignments
-            List<AmbulanceAssignment> allAssignments = ambulanceAssignmentRepository.findAll();
+            // Get the current authenticated AmbulanceProvider
+            AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
 
+            // Get the company associated with the AmbulanceProvider
+            Company providerCompany = ambulanceProvider.getCompany();
+
+            // 1. Get all ambulance assignments for the provider's company
+            List<AmbulanceAssignment> allAssignments = ambulanceAssignmentRepository.findByAmbulanceProviderCompany(providerCompany);
+            if (allAssignments.isEmpty()) {
+                throw new NoSuchElementException("No ambulance assignments found for this company.");
+            }
             // 2. Filter available ambulances
             List<AmbulanceAssignmentDTO> availableAmbulances = new ArrayList<>();
 
             for (AmbulanceAssignment assignment : allAssignments) {
                 // Check if this assignment is linked to any event
                 Optional<EventAmbulanceAssignment> eventAssignment =
-                        eventAmbulanceAssignmentRepository.findByAmbulanceAssignment(assignment);
+                        eventAmbulanceAssignmentRepository
+                                .findByAmbulanceAssignmentAndStatus(assignment, RequestStatus.REJECTED);
 
                 // If no event assignment exists, ambulance is available
                 if (eventAssignment.isEmpty()) {
@@ -234,6 +243,10 @@ public class AmbulanceService {
                     new ApiResponse<>(true, "Available ambulances retrieved successfully", availableAmbulances)
             );
 
+        }catch (NoSuchElementException e) {
+            log.error("Error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

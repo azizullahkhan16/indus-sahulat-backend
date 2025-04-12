@@ -3,6 +3,7 @@ package com.aktic.indussahulatbackend.repository.ambulanceAssignment;
 import com.aktic.indussahulatbackend.model.entity.Ambulance;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
+import com.aktic.indussahulatbackend.model.entity.Company;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,4 +34,6 @@ public interface AmbulanceAssignmentRepository extends JpaRepository<AmbulanceAs
     AmbulanceAssignment findByAmbulanceDriverAndIsActiveTrue(AmbulanceDriver ambulanceDriver);
 
     Optional<AmbulanceAssignment> findByAmbulanceDriver(AmbulanceDriver driver);
+
+    List<AmbulanceAssignment> findByAmbulanceProviderCompany(Company providerCompany);
 }
