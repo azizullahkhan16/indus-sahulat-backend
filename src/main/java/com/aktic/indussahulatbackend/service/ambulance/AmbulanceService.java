@@ -159,10 +159,6 @@ public class AmbulanceService {
                     .filter(ambulance -> !ambulanceAssignmentRepository.existsByAmbulanceAndIsActiveTrue(ambulance))
                     .toList();
 
-            if (unassignedAmbulances.isEmpty()) {
-                throw new AmbulanceNotFoundException("No unassigned ambulances found for this company.");
-            }
-
             List<AmbulanceDTO> ambulanceDTOList = unassignedAmbulances.stream()
                     .map(AmbulanceDTO::new)
                     .toList();

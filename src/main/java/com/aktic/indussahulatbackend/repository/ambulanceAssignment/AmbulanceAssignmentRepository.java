@@ -24,7 +24,7 @@ public interface AmbulanceAssignmentRepository extends JpaRepository<AmbulanceAs
 
     boolean existsByAmbulanceDriverAndIsActiveTrue(AmbulanceDriver ambulanceDriver);
 
-    Page<AmbulanceAssignment> findByIsActiveTrue(Pageable pageable);
+    Page<AmbulanceAssignment> findByIsActiveTrueAndAmbulanceCompanyId(Long companyId, Pageable pageable);
 
     @Modifying
     @Transactional

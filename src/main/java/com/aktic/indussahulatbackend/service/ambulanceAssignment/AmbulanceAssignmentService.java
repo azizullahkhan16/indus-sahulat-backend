@@ -5,10 +5,7 @@ import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceNotFoun
 import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceProviderNotFoundException;
 import com.aktic.indussahulatbackend.exception.customexceptions.DriverNotFoundException;
 import com.aktic.indussahulatbackend.model.common.Location;
-import com.aktic.indussahulatbackend.model.entity.Ambulance;
-import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
-import com.aktic.indussahulatbackend.model.entity.AmbulanceProvider;
-import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
+import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
@@ -95,17 +92,15 @@ public class AmbulanceAssignmentService
     public ResponseEntity<ApiResponse<Page<AmbulanceAssignmentDTO>>> getAllActiveAssignments(Integer pageNumber, Integer limit)
     {
         try {
+            AmbulanceProvider provider = (AmbulanceProvider) authService.getCurrentUser();
+            Company company = provider.getCompany();
+
             int page = (pageNumber != null && pageNumber > 0) ? pageNumber : 0;
             int size = (limit != null && limit > 0) ? limit : 10;
 
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-            Page<AmbulanceAssignment> ambulanceAssignments = ambulanceAssignmentRepository.findByIsActiveTrue(pageable);
-
-            if (ambulanceAssignments.isEmpty())
-            {
-                throw new NoSuchElementException("No active ambulance assignments found.");
-            }
+            Page<AmbulanceAssignment> ambulanceAssignments = ambulanceAssignmentRepository.findByIsActiveTrueAndAmbulanceCompanyId(company.getId(),pageable);
 
             Page<AmbulanceAssignmentDTO> ambulanceAssignmentDTOPage = ambulanceAssignments.map(AmbulanceAssignmentDTO::new);
 
@@ -124,11 +119,12 @@ public class AmbulanceAssignmentService
         try {
 
             AmbulanceProvider provider = (AmbulanceProvider) authService.getCurrentUser();
+            Company providerCompany = provider.getCompany();
 
             AmbulanceAssignment ambulanceAssignment = ambulanceAssignmentRepository.findById(id).orElseThrow(() -> new AmbulanceAssignmentNotFoundException(AmbulanceAssignmentNotFoundException.DEFAULT_MESSAGE));
 
-            if (!ambulanceAssignment.getAmbulanceProvider().equals(provider)) {
-                return new ResponseEntity<>(new ApiResponse(false, "You can only unassign ambulances assigned by you", null), HttpStatus.FORBIDDEN);
+            if (!ambulanceAssignment.getAmbulanceProvider().getCompany().equals(providerCompany)) {
+                return new ResponseEntity<>(new ApiResponse(false, "You can only unassign ambulances assigned by your company.", null), HttpStatus.FORBIDDEN);
             }
 
             ambulanceAssignmentRepository.unassignById(id);

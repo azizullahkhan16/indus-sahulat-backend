@@ -45,10 +45,6 @@ public class AmbulanceDriverService {
                     .filter(driver -> !ambulanceAssignmentRepository.existsByAmbulanceDriverAndIsActiveTrue(driver))
                     .toList();
 
-            if (unassignedDrivers.isEmpty()) {
-                throw new DriverNotFoundException("No unassigned drivers found for this company.");
-            }
-
             List<AmbulanceDriverDTO> DriverDTOList = unassignedDrivers.stream()
                     .map(AmbulanceDriverDTO::new)
                     .toList();
