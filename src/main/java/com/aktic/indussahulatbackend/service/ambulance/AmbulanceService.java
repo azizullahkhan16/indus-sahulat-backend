@@ -153,7 +153,7 @@ public class AmbulanceService {
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
             Company providerCompany = ambulanceProvider.getCompany();
 
-            Page<Ambulance> allAmbulances = ambulanceRepository.findByCompany(providerCompany,pageable);
+            Page<Ambulance> allAmbulances = ambulanceRepository.findByCompany(providerCompany, pageable);
 
             List<Ambulance> unassignedAmbulances = allAmbulances.stream()
                     .filter(ambulance -> !ambulanceAssignmentRepository.existsByAmbulanceAndIsActiveTrue(ambulance))
@@ -178,7 +178,7 @@ public class AmbulanceService {
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
             Company providerCompany = ambulanceProvider.getCompany();
 
-            Ambulance ambulance = ambulanceRepository.findById(id).orElseThrow(()-> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
+            Ambulance ambulance = ambulanceRepository.findById(id).orElseThrow(() -> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
 
             if (!ambulance.getCompany().getId().equals(providerCompany.getId())) {
                 throw new AmbulanceNotFoundException("Ambulance not found in your company.");
@@ -204,7 +204,8 @@ public class AmbulanceService {
             Company providerCompany = ambulanceProvider.getCompany();
 
             // 1. Get all ambulance assignments for the provider's company
-            List<AmbulanceAssignment> allAssignments = ambulanceAssignmentRepository.findByAmbulanceProviderCompany(providerCompany);
+            List<AmbulanceAssignment> allAssignments = ambulanceAssignmentRepository
+                    .findByAmbulanceProviderCompanyAndIsActiveTrue(providerCompany);
             if (allAssignments.isEmpty()) {
                 throw new NoSuchElementException("No ambulance assignments found for this company.");
             }
@@ -239,7 +240,7 @@ public class AmbulanceService {
                     new ApiResponse<>(true, "Available ambulances retrieved successfully", availableAmbulances)
             );
 
-        }catch (NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(false, e.getMessage(), null));
@@ -255,15 +256,15 @@ public class AmbulanceService {
         try {
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
             // Check if event exists and the status is CREATED
-            IncidentEvent event = incidentEventRepository.findById(eventAmbulanceAssignmentDTO.getEventId())
+            IncidentEvent event = incidentEventRepository.findByIdAndStatus(eventAmbulanceAssignmentDTO.getEventId(), EventStatus.QUESTIONNAIRE_FILLED)
                     .orElseThrow(() -> new NoSuchElementException("Event not found."));
 
-            if(event.getAmbulanceAssignment() != null) {
+            if (event.getAmbulanceAssignment() != null) {
                 throw new IllegalStateException("Ambulance is already assigned to this event");
             }
 
             // Check if ambulance assignment exists
-            AmbulanceAssignment ambulanceAssignment = ambulanceAssignmentRepository.findById(eventAmbulanceAssignmentDTO.getAmbulanceAssignmentId())
+            AmbulanceAssignment ambulanceAssignment = ambulanceAssignmentRepository.findByIdAndIsActiveTrue(eventAmbulanceAssignmentDTO.getAmbulanceAssignmentId())
                     .orElseThrow(() -> new NoSuchElementException("Ambulance assignment not found"));
 
             // Check if this ambulance is already assigned to another active event
@@ -310,20 +311,25 @@ public class AmbulanceService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<EventAmbulanceAssignmentDTO>> getStatus(Long id) {
         try {
-            EventAmbulanceAssignment eventAmbulanceAssignment = eventAmbulanceAssignmentRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Event ambulance assignment not found"));
+            AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
+            Company providerCompany = ambulanceProvider.getCompany();
+            // Check if event ambulance assignment exists
+            EventAmbulanceAssignment eventAmbulanceAssignment = eventAmbulanceAssignmentRepository
+                    .findByIdAndAmbulanceProviderCompany(id, providerCompany)
+                    .orElseThrow(() -> new NoSuchElementException("Event ambulance assignment not found"));
 
             EventAmbulanceAssignmentDTO eventAmbulanceAssignmentDTO = new EventAmbulanceAssignmentDTO(eventAmbulanceAssignment);
 
-            return new ResponseEntity<>(new ApiResponse<>(true,"Event Ambulance Assignment fetched successfully",eventAmbulanceAssignmentDTO),HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse<>(true, "Event Ambulance Assignment fetched successfully", eventAmbulanceAssignmentDTO), HttpStatus.OK);
 
         } catch (NoSuchElementException e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(false, e.getMessage(), null));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "An unexpected error occurred", null));

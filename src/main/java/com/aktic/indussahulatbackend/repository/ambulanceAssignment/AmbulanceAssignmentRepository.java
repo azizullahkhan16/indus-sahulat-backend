@@ -4,7 +4,7 @@ import com.aktic.indussahulatbackend.model.entity.Ambulance;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.entity.AmbulanceDriver;
 import com.aktic.indussahulatbackend.model.entity.Company;
-import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AmbulanceAssignmentRepository extends JpaRepository<AmbulanceAssignment,Long>
-{
+public interface AmbulanceAssignmentRepository extends JpaRepository<AmbulanceAssignment, Long> {
 
     boolean existsByAmbulanceAndIsActiveTrue(Ambulance ambulance);
 
@@ -33,7 +32,7 @@ public interface AmbulanceAssignmentRepository extends JpaRepository<AmbulanceAs
 
     AmbulanceAssignment findByAmbulanceDriverAndIsActiveTrue(AmbulanceDriver ambulanceDriver);
 
-    Optional<AmbulanceAssignment> findByAmbulanceDriver(AmbulanceDriver driver);
+    List<AmbulanceAssignment> findByAmbulanceProviderCompanyAndIsActiveTrue(Company providerCompany);
 
-    List<AmbulanceAssignment> findByAmbulanceProviderCompany(Company providerCompany);
+    Optional<AmbulanceAssignment> findByIdAndIsActiveTrue(Long ambulanceAssignmentId);
 }
