@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(SecurityConstants.WHITE_LIST_URL)
                                 .permitAll()
+                                .requestMatchers("/chat/**").hasAnyRole("PATIENT", "AMBULANCE_DRIVER", "AMBULANCE_PROVIDER", "HOSPITAL_ADMIN")
                                 .requestMatchers("/api/patient/**").hasRole("PATIENT")
                                 .requestMatchers("/api/ambulance-driver/**").hasRole("AMBULANCE_DRIVER")
                                 .requestMatchers("/api/ambulance-provider/**").hasRole("AMBULANCE_PROVIDER")

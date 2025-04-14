@@ -35,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
+        // Bypass filter for specific paths
         for (String path : SecurityConstants.FILTER_BYPASS_PATHS) {
             if (request.getServletPath().contains(path)) {
                 filterChain.doFilter(request, response);
@@ -42,30 +43,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        if (!request.getServletPath().startsWith("/api")) {
+        // Process /api and /chat paths
+        boolean isApiPath = request.getServletPath().startsWith("/api");
+        boolean isWebSocketPath = request.getServletPath().startsWith("/chat");
+
+        if (!isApiPath && !isWebSocketPath) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        System.out.println("JwtAuthenticationFilter: " + request.getServletPath());
-
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userPhone;
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // Extract JWT from header or query parameter
+        String jwt = resolveToken(request);
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
-        userPhone = jwtService.extractUsername(jwt);
+        String userPhone = jwtService.extractUsername(jwt);
         String userRole = jwtService.extractRole(jwt);
 
         if (userPhone != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsernameAndRole(userPhone, userRole);
             if (jwtService.isTokenValid(jwt, userDetails)) {
-                System.out.println("userDetails: " + userDetails.getAuthorities());
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
@@ -73,10 +72,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                System.out.println(authToken);
             }
         }
         filterChain.doFilter(request, response);
     }
-}
 
+    private String resolveToken(HttpServletRequest request) {
+        // Check Authorization header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        // Check query parameter for WebSocket
+        String token = request.getParameter("token");
+        if (token != null && !token.isEmpty()) {
+            return token;
+        }
+        return null;
+    }
+}

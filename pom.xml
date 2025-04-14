@@ -30,6 +30,7 @@
         <java.version>21</java.version>
         <jjwt.version>0.12.6</jjwt.version>
         <mapStruct.version>1.6.3</mapStruct.version>
+        <springSecurityMessaging.version>6.2.3</springSecurityMessaging.version>
     </properties>
     <dependencies>
         <dependency>
@@ -97,6 +98,15 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-messaging</artifactId>
+            <version>${springSecurityMessaging.version}</version>
         </dependency>
     </dependencies>
 
