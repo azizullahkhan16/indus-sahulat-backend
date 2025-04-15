@@ -4,9 +4,12 @@ import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.common.eventState.*;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
+import com.aktic.indussahulatbackend.model.enums.NotificationType;
+import com.aktic.indussahulatbackend.model.enums.ReceiverType;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.CreateEventDTO;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
+import com.aktic.indussahulatbackend.model.request.NotificationRequestDTO;
 import com.aktic.indussahulatbackend.model.request.UpdateAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventHospitalAssignmentDTO;
@@ -18,7 +21,9 @@ import com.aktic.indussahulatbackend.repository.eventHospitalAssignment.EventHos
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
+import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
+import com.aktic.indussahulatbackend.util.JsonUtil;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +55,7 @@ public class IncidentEventService {
     private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
     private final EventAmbulanceAssignmentRepository eventAmbulanceAssignmentRepository;
     private final EventHospitalAssignmentRepository eventHospitalAssignmentRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(CreateEventDTO createEventDTO) {
@@ -213,6 +219,17 @@ public class IncidentEventService {
 
             EventAmbulanceAssignment updatedEventAssignment = eventAmbulanceAssignmentRepository.save(eventAssignment);
 
+            NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                    .receiverId(updatedEventAssignment.getAmbulanceProvider().getId())
+                    .receiverType(ReceiverType.AMBULANCE_PROVIDER)
+                    .payload(JsonUtil.convertObjectToJson(new EventAmbulanceAssignmentDTO(updatedEventAssignment)))
+                    .notificationType(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())
+                            ? NotificationType.EVENT_AMBULANCE_ASSIGN_ACCEPT
+                            : NotificationType.EVENT_AMBULANCE_ASSIGN_REJECT)
+                    .build();
+
+            notificationService.sendNotification(notificationRequestDTO);
+
             return ResponseEntity.ok(
                     new ApiResponse<>(true, "Assigned events updated successfully", new IncidentEventDTO(updatedEventAssignment.getEvent()))
             );
@@ -347,6 +364,17 @@ public class IncidentEventService {
             }
 
             EventHospitalAssignment updatedEventAssignment = eventHospitalAssignmentRepository.save(eventAssignment);
+
+            NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
+                    .receiverId(updatedEventAssignment.getEvent().getAmbulanceAssignment().getAmbulanceAssignment().getAmbulanceDriver().getId())
+                    .receiverType(ReceiverType.AMBULANCE_DRIVER)
+                    .payload(JsonUtil.convertObjectToJson(new EventHospitalAssignmentDTO(updatedEventAssignment)))
+                    .notificationType(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())
+                            ? NotificationType.EVENT_HOSPITAL_ASSIGN_ACCEPT
+                            : NotificationType.EVENT_HOSPITAL_ASSIGN_REJECT)
+                    .build();
+
+            notificationService.sendNotification(notificationRequestDTO);
 
             return ResponseEntity.ok(
                     new ApiResponse<>(true, "Admit Request Updated Successfully", new IncidentEventDTO(updatedEventAssignment.getEvent()))

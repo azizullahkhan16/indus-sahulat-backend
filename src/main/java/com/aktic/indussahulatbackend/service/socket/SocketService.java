@@ -2,6 +2,7 @@ package com.aktic.indussahulatbackend.service.socket;
 
 import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.entity.IncidentEvent;
+import com.aktic.indussahulatbackend.model.entity.Notification;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
@@ -99,6 +100,16 @@ public class SocketService {
         } catch (Exception e) {
             log.error("Error saving debounced location for event {}: {}", eventId, e.getMessage(), e);
             // Keep pending update for retry if needed
+        }
+    }
+
+
+    public void sendNotificationToUser(Notification notification) {
+        try {
+            log.info("Sending notification to user: {}", notification);
+            messagingTemplate.convertAndSend("/user/notification/" + notification.getReceiverId(), notification);
+        } catch (Exception e) {
+            log.error("Error sending notification: {}", e.getMessage(), e);
         }
     }
 }

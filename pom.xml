@@ -31,6 +31,7 @@
         <jjwt.version>0.12.6</jjwt.version>
         <mapStruct.version>1.6.3</mapStruct.version>
         <springSecurityMessaging.version>6.2.3</springSecurityMessaging.version>
+        <jackson.version>2.18.3</jackson.version>
     </properties>
     <dependencies>
         <dependency>
@@ -107,6 +108,11 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-messaging</artifactId>
             <version>${springSecurityMessaging.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 
