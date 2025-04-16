@@ -36,6 +36,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/ambulance-driver/**").hasRole("AMBULANCE_DRIVER")
                                 .requestMatchers("/api/ambulance-provider/**").hasRole("AMBULANCE_PROVIDER")
                                 .requestMatchers("/api/hospital-admin/**").hasRole("HOSPITAL_ADMIN")
+                                .requestMatchers("/api/notification/**").hasAnyRole("PATIENT", "AMBULANCE_DRIVER", "AMBULANCE_PROVIDER", "HOSPITAL_ADMIN")
                                 .anyRequest().denyAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
