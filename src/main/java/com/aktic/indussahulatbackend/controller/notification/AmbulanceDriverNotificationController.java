@@ -6,10 +6,7 @@ import com.aktic.indussahulatbackend.util.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/notification")
@@ -24,5 +21,12 @@ public class AmbulanceDriverNotificationController {
             @RequestParam(required = false, defaultValue = "10") Integer limit
     ) {
         return notificationService.getNotifications(pageNumber, limit);
+    }
+
+    @PatchMapping("/mark-as-read/{notificationId}")
+    public ResponseEntity<ApiResponse<Notification>> markAsRead(
+            @PathVariable Long notificationId
+    ) {
+        return notificationService.markNotificationAsRead(notificationId);
     }
 }
