@@ -4,12 +4,14 @@ import com.aktic.indussahulatbackend.model.common.eventState.QuestionnaireFilled
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.request.AnswerDTO;
 import com.aktic.indussahulatbackend.model.request.SaveResponseDTO;
+import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.repository.option.OptionRepository;
 import com.aktic.indussahulatbackend.repository.question.QuestionRepository;
 import com.aktic.indussahulatbackend.repository.questionnaire.QuestionnaireRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
+import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import jakarta.validation.Valid;
@@ -36,22 +38,23 @@ public class QuestionnaireService {
     private final OptionRepository optionRepository;
     private final SnowflakeIdGenerator idGenerator;
     private final AuthService authService;
+    private final SocketService socketService;
 
     @Transactional
     public ResponseEntity<ApiResponse<List<Question>>> getQuestionnaire(Long questionnaireId) {
-        try{
+        try {
             Optional<Questionnaire> questionnaire = questionnaireRepository.findById(questionnaireId);
-            if(questionnaire.isEmpty()) {
+            if (questionnaire.isEmpty()) {
                 return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Questionnaire not found", null));
             }
 
             Optional<List<Question>> questions = questionRepository.findByQuestionnaireId(questionnaireId);
-            if(questions != null && questions.isEmpty()) {
+            if (questions != null && questions.isEmpty()) {
                 return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Questions not found", null));
             }
 
             return ResponseEntity.ok(new ApiResponse<>(true, "Questionnaire fetched successfully", questions.get()));
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error fetching questionnaire: {}", e.getMessage());
             return ResponseEntity.status(500).body(new ApiResponse<>(false, "Error fetching questionnaire", null));
         }
@@ -110,11 +113,13 @@ public class QuestionnaireService {
             event.nextState(new QuestionnaireFilledState());
             // Save All Responses
             responseRepository.saveAll(responsesToSave);
-            incidentEventRepository.save(event);
+            event = incidentEventRepository.save(event);
+
+            socketService.sendUpdatedEvent(new IncidentEventDTO(event));
 
             return ResponseEntity.ok(new ApiResponse<>(true, "Responses saved successfully", null));
 
-        }catch (NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             log.error("Validation error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(false, e.getMessage(), null));

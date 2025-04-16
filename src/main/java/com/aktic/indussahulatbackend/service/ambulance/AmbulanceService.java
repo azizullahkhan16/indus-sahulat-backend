@@ -11,6 +11,7 @@ import com.aktic.indussahulatbackend.model.request.AssignEventAmbulanceDTO;
 import com.aktic.indussahulatbackend.model.request.NotificationRequestDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
+import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.model.response.ambulance.AmbulanceDTO;
 import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
@@ -18,6 +19,7 @@ import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAm
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
+import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
@@ -43,6 +45,7 @@ public class AmbulanceService {
     private final EventAmbulanceAssignmentRepository eventAmbulanceAssignmentRepository;
     private final IncidentEventRepository incidentEventRepository;
     private final NotificationService notificationService;
+    private final SocketService socketService;
 
 //    public AmbulanceType determineCategory(FormRequest formRequest) {
 //        boolean isUnconscious = false;
@@ -303,6 +306,8 @@ public class AmbulanceService {
 
             // Send notification to the ambulance driver
             notificationService.sendNotification(notificationRequestDTO);
+
+            socketService.sendUpdatedEvent(new IncidentEventDTO(savedAssignment.getEvent()));
 
             return ResponseEntity.ok(
                     new ApiResponse<>(true, "Ambulance assigned successfully", eventAmbulanceResponse)

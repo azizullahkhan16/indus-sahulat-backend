@@ -22,6 +22,7 @@ import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepos
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
+import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
@@ -54,6 +55,7 @@ public class IncidentEventService {
     private final EventAmbulanceAssignmentRepository eventAmbulanceAssignmentRepository;
     private final EventHospitalAssignmentRepository eventHospitalAssignmentRepository;
     private final NotificationService notificationService;
+    private final SocketService socketService;
 
     @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(CreateEventDTO createEventDTO) {
@@ -228,8 +230,12 @@ public class IncidentEventService {
 
             notificationService.sendNotification(notificationRequestDTO);
 
+            IncidentEventDTO updatedEvent = new IncidentEventDTO(updatedEventAssignment.getEvent());
+
+            socketService.sendUpdatedEvent(updatedEvent);
+
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Assigned events updated successfully", new IncidentEventDTO(updatedEventAssignment.getEvent()))
+                    new ApiResponse<>(true, "Assigned events updated successfully", updatedEvent)
             );
 
         } catch (Exception e) {
@@ -290,9 +296,12 @@ public class IncidentEventService {
             // Update the event status
             incidentEvent.nextState(new DriverArrivedState());
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
+            IncidentEventDTO incidentEventDTO = new IncidentEventDTO(updatedEvent);
+
+            socketService.sendUpdatedEvent(incidentEventDTO);
 
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Driver arrived at pickup location", new IncidentEventDTO(updatedEvent))
+                    new ApiResponse<>(true, "Driver arrived at pickup location", incidentEventDTO)
             );
 
         } catch (NoSuchElementException e) {
@@ -374,8 +383,12 @@ public class IncidentEventService {
 
             notificationService.sendNotification(notificationRequestDTO);
 
+            IncidentEventDTO updatedEvent = new IncidentEventDTO(updatedEventAssignment.getEvent());
+
+            socketService.sendUpdatedEvent(updatedEvent);
+
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Admit Request Updated Successfully", new IncidentEventDTO(updatedEventAssignment.getEvent()))
+                    new ApiResponse<>(true, "Admit Request Updated Successfully", updatedEvent)
             );
 
         } catch (NoSuchElementException e) {
@@ -411,8 +424,12 @@ public class IncidentEventService {
             incidentEvent.setPickupTime(Instant.now());
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
+            IncidentEventDTO incidentEventDTO = new IncidentEventDTO(updatedEvent);
+
+            socketService.sendUpdatedEvent(incidentEventDTO);
+
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Patient Picked from the location successfully", new IncidentEventDTO(updatedEvent))
+                    new ApiResponse<>(true, "Patient Picked from the location successfully", incidentEventDTO)
             );
 
         } catch (NoSuchElementException e) {
@@ -448,8 +465,12 @@ public class IncidentEventService {
             incidentEvent.setDropOffTime(Instant.now());
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
+            IncidentEventDTO incidentEventDTO = new IncidentEventDTO(updatedEvent);
+
+            socketService.sendUpdatedEvent(incidentEventDTO);
+
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Patient arrived at hospital successfully", new IncidentEventDTO(updatedEvent))
+                    new ApiResponse<>(true, "Patient arrived at hospital successfully", incidentEventDTO)
             );
 
         } catch (NoSuchElementException e) {
@@ -523,8 +544,12 @@ public class IncidentEventService {
             incidentEvent.cancelEvent();
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
+            IncidentEventDTO incidentEventDTO = new IncidentEventDTO(updatedEvent);
+
+            socketService.sendUpdatedEvent(incidentEventDTO);
+
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Incident event cancelled successfully", new IncidentEventDTO(updatedEvent))
+                    new ApiResponse<>(true, "Incident event cancelled successfully", incidentEventDTO)
             );
 
         } catch (NoSuchElementException e) {

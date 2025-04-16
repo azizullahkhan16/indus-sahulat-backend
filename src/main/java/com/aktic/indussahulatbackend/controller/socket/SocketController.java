@@ -17,12 +17,7 @@ import org.springframework.stereotype.Controller;
 public class SocketController {
     private final SocketService socketService;
 
-    @MessageMapping("/join/event/{eventId}")
-    public void joinIncidentEvent(@DestinationVariable Long eventId) {
-        socketService.joinIncidentEvent(eventId);
-    }
-
-    @MessageMapping("/live-location/event/{eventId}")
+    @MessageMapping("/event/live-location/{eventId}")
     public void updateLiveLocation(@DestinationVariable Long eventId,
                                    @Valid LocationDTO locationDTO) {
         socketService.updateLiveLocation(eventId, locationDTO);

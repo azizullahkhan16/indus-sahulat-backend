@@ -1,14 +1,13 @@
 package com.aktic.indussahulatbackend.service.socket;
 
+import com.aktic.indussahulatbackend.constant.SocketEndpoint;
 import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.entity.IncidentEvent;
 import com.aktic.indussahulatbackend.model.entity.Notification;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
-import com.aktic.indussahulatbackend.model.response.LiveEventUpdateDTO;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -29,22 +28,16 @@ public class SocketService {
     private final ConcurrentHashMap<Long, AtomicReference<LocationDTO>> pendingUpdates = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
 
-    @Transactional(readOnly = true)
-    public void joinIncidentEvent(Long eventId) {
-        try {
-            // Fetch event with patient eagerly
-            IncidentEvent event = incidentEventRepository.findById(eventId)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid event ID"));
-
-            messagingTemplate.convertAndSend("/user/event/" + eventId, new IncidentEventDTO(event));
-        } catch (Exception e) {
-            log.error("Error joining event: {}", e.getMessage(), e);
-        }
-    }
-
     public void sendUpdatedEvent(IncidentEventDTO incidentEvent) {
         try {
-            messagingTemplate.convertAndSend("/user/event/" + incidentEvent.getId(), incidentEvent);
+            log.info("Sending updated event: {}", incidentEvent);
+            messagingTemplate.convertAndSend(SocketEndpoint.INCIDENT_EVENT_UPDATE.getPath() + incidentEvent.getId(), incidentEvent);
+
+            // Handle event termination
+            if (incidentEvent.getStatus().equals(EventStatus.PATIENT_ADMITTED.name())
+                    || incidentEvent.getStatus().equals(EventStatus.CANCELLED.name())) {
+                handleEventTermination(incidentEvent);
+            }
         } catch (Exception e) {
             log.error("Error sending updated event: {}", e.getMessage(), e);
         }
@@ -65,7 +58,7 @@ public class SocketService {
             ScheduledFuture<?> newTask = scheduler.schedule(() -> saveLocation(eventId), 10, TimeUnit.SECONDS);
             scheduledTasks.put(eventId, newTask);
 
-            messagingTemplate.convertAndSend("/user/live-location/event/" + eventId, locationDTO);
+            messagingTemplate.convertAndSend(SocketEndpoint.INCIDENT_EVENT_LIVE_LOCATION.getPath() + eventId, locationDTO);
 
         } catch (Exception e) {
             log.error("Error updating live location: {}", e.getMessage(), e);
@@ -107,9 +100,30 @@ public class SocketService {
     public void sendNotificationToUser(Notification notification) {
         try {
             log.info("Sending notification to user: {}", notification);
-            messagingTemplate.convertAndSend("/user/notification/" + notification.getReceiverId(), notification);
+            messagingTemplate.convertAndSend(SocketEndpoint.USER_NOTIFICATION.getPath() + notification.getReceiverId(), notification);
         } catch (Exception e) {
             log.error("Error sending notification: {}", e.getMessage(), e);
+        }
+    }
+
+    private void handleEventTermination(IncidentEventDTO incidentEventDTO) {
+        try {
+            if (!incidentEventDTO.getStatus().equals(EventStatus.PATIENT_ADMITTED.name())
+                    && !incidentEventDTO.getStatus().equals(EventStatus.CANCELLED.name())) {
+                log.info("Event can not terminated {}", incidentEventDTO.getId());
+                return;
+            }
+
+            // Clean up pending updates and tasks
+            pendingUpdates.remove(incidentEventDTO.getId());
+            ScheduledFuture<?> task = scheduledTasks.remove(incidentEventDTO.getId());
+            if (task != null) {
+                task.cancel(false);
+            }
+
+            log.info("Terminated event {}", incidentEventDTO.getId());
+        } catch (Exception e) {
+            log.error("Error handling event termination: {}", e.getMessage(), e);
         }
     }
 }
