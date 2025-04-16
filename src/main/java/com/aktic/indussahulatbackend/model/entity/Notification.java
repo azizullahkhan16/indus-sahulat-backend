@@ -2,6 +2,7 @@ package com.aktic.indussahulatbackend.model.entity;
 
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
 import com.aktic.indussahulatbackend.model.enums.ReceiverType;
+import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,9 +37,9 @@ public class Notification {
     @Column(name = "receiver_type", nullable = false)
     private ReceiverType receiverType;
 
-    @Lob
     @Column(columnDefinition = "TEXT", name = "payload")
-    private String payload;
+    @Convert(converter = JsonObjectConverter.class)
+    private Object payload;
 
     @Column(name = "is_read")
     private Boolean isRead;

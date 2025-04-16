@@ -13,11 +13,10 @@ import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepos
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
-import com.aktic.indussahulatbackend.util.JsonUtil;
+import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -79,7 +78,7 @@ public class HospitalService {
                     .receiverId(eventHospitalAssignment.getHospital().getId())
                     .receiverType(ReceiverType.HOSPITAL_ADMIN)
                     .notificationType(NotificationType.EVENT_HOSPITAL_ASSIGN_REQUEST)
-                    .payload(JsonUtil.convertObjectToJson(eventHospitalAssignmentDTO))
+                    .payload(eventHospitalAssignmentDTO)
                     .build();
 
             notificationService.sendNotification(notificationRequestDTO);

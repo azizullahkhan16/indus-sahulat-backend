@@ -23,13 +23,11 @@ import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
-import com.aktic.indussahulatbackend.util.JsonUtil;
+import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -222,7 +220,7 @@ public class IncidentEventService {
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(updatedEventAssignment.getAmbulanceProvider().getId())
                     .receiverType(ReceiverType.AMBULANCE_PROVIDER)
-                    .payload(JsonUtil.convertObjectToJson(new EventAmbulanceAssignmentDTO(updatedEventAssignment)))
+                    .payload(new EventAmbulanceAssignmentDTO(updatedEventAssignment))
                     .notificationType(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())
                             ? NotificationType.EVENT_AMBULANCE_ASSIGN_ACCEPT
                             : NotificationType.EVENT_AMBULANCE_ASSIGN_REJECT)
@@ -368,7 +366,7 @@ public class IncidentEventService {
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(updatedEventAssignment.getEvent().getAmbulanceAssignment().getAmbulanceAssignment().getAmbulanceDriver().getId())
                     .receiverType(ReceiverType.AMBULANCE_DRIVER)
-                    .payload(JsonUtil.convertObjectToJson(new EventHospitalAssignmentDTO(updatedEventAssignment)))
+                    .payload(new EventHospitalAssignmentDTO(updatedEventAssignment))
                     .notificationType(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())
                             ? NotificationType.EVENT_HOSPITAL_ASSIGN_ACCEPT
                             : NotificationType.EVENT_HOSPITAL_ASSIGN_REJECT)

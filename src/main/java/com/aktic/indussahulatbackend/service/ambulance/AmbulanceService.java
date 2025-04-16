@@ -16,15 +16,11 @@ import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
-import com.aktic.indussahulatbackend.repository.patient.PatientRepository;
-import com.aktic.indussahulatbackend.repository.question.QuestionRepository;
-import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
-import com.aktic.indussahulatbackend.util.JsonUtil;
+import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -301,7 +297,7 @@ public class AmbulanceService {
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(ambulanceAssignment.getAmbulanceDriver().getId())
                     .receiverType(ReceiverType.AMBULANCE_DRIVER)
-                    .payload(JsonUtil.convertObjectToJson(eventAmbulanceResponse))
+                    .payload(eventAmbulanceResponse)
                     .notificationType(NotificationType.EVENT_AMBULANCE_ASSIGN_REQUEST)
                     .build();
 
