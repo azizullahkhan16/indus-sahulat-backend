@@ -4,14 +4,17 @@ import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
 import com.aktic.indussahulatbackend.model.enums.ReceiverType;
+import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.NotificationRequestDTO;
 import com.aktic.indussahulatbackend.model.request.SendAdmitRequestDTO;
 import com.aktic.indussahulatbackend.model.response.EventHospitalAssignmentDTO;
+import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.repository.eventHospitalAssignment.EventHospitalAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.hospital.HospitalRepository;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
+import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
@@ -22,7 +25,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +39,7 @@ public class HospitalService {
     private final SnowflakeIdGenerator idGenerator;
     private final EventHospitalAssignmentRepository eventHospitalAssignmentRepository;
     private final NotificationService notificationService;
+    private final SocketService socketService;
 
     public ResponseEntity<ApiResponse<List<Hospital>>> getAllHospitals() {
         List<Hospital> hospitals = hospitalRepository.findAll();
@@ -64,6 +70,16 @@ public class HospitalService {
                 return new ResponseEntity<>(new ApiResponse<>(false, "You are not authorized to send admit request for this event", null), HttpStatus.UNAUTHORIZED);
             }
 
+            // verify if the request is already sent with status as REQUESTED
+            Optional<EventHospitalAssignment> existingHospitalAssignment =
+                    eventHospitalAssignmentRepository.findByEventAndHospitalAndStatus(
+                            event, hospital, RequestStatus.REQUESTED);
+
+            if (existingHospitalAssignment.isPresent()) {
+                return new ResponseEntity<>(
+                        new ApiResponse<>(false, "Admit request already sent", null),
+                        HttpStatus.BAD_REQUEST);
+            }
             EventHospitalAssignment eventHospitalAssignment = EventHospitalAssignment.builder()
                     .id(idGenerator.nextId())
                     .hospital(hospital)
@@ -82,6 +98,14 @@ public class HospitalService {
                     .build();
 
             notificationService.sendNotification(notificationRequestDTO);
+
+            Map<String, Object> admitRequestMap = Map.of(
+                    "event", new IncidentEventDTO(eventHospitalAssignment.getEvent()),
+                    "eventHospitalAssignment", eventHospitalAssignmentDTO
+            );
+
+            socketService.sendNewAdmitRequest(admitRequestMap);
+
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Admit request sent successfully", eventHospitalAssignmentDTO), HttpStatus.OK);
 

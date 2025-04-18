@@ -14,6 +14,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -103,6 +104,24 @@ public class SocketService {
             messagingTemplate.convertAndSend(SocketEndpoint.USER_NOTIFICATION.getPath() + notification.getReceiverId(), notification);
         } catch (Exception e) {
             log.error("Error sending notification: {}", e.getMessage(), e);
+        }
+    }
+
+    public void sendNewActiveEvent(IncidentEventDTO incidentEvent) {
+        try {
+            log.info("Sending new active event: {}", incidentEvent);
+            messagingTemplate.convertAndSend(SocketEndpoint.ACTIVE_INCIDENT_EVENT.getPath(), incidentEvent);
+        } catch (Exception e) {
+            log.error("Error sending new active event: {}", e.getMessage(), e);
+        }
+    }
+
+    public void sendNewAdmitRequest(Map<String, Object> admitRequest) {
+        try {
+            log.info("Sending new admit request: {}", admitRequest);
+            messagingTemplate.convertAndSend(SocketEndpoint.NEW_ADMIT_REQUEST.getPath(), admitRequest);
+        } catch (Exception e) {
+            log.error("Error sending new admit request: {}", e.getMessage(), e);
         }
     }
 

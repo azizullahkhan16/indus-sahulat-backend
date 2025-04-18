@@ -115,7 +115,10 @@ public class QuestionnaireService {
             responseRepository.saveAll(responsesToSave);
             event = incidentEventRepository.save(event);
 
-            socketService.sendUpdatedEvent(new IncidentEventDTO(event));
+            IncidentEventDTO eventDTO = new IncidentEventDTO(event);
+
+            socketService.sendUpdatedEvent(eventDTO);
+            socketService.sendNewActiveEvent(eventDTO);
 
             return ResponseEntity.ok(new ApiResponse<>(true, "Responses saved successfully", null));
 
