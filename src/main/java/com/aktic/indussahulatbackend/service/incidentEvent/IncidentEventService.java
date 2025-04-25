@@ -22,6 +22,7 @@ import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepos
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
+import com.aktic.indussahulatbackend.service.redis.RedisService;
 import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.JsonObjectConverter;
@@ -56,6 +57,7 @@ public class IncidentEventService {
     private final EventHospitalAssignmentRepository eventHospitalAssignmentRepository;
     private final NotificationService notificationService;
     private final SocketService socketService;
+    private final RedisService redisService;
 
     @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(CreateEventDTO createEventDTO) {
@@ -216,6 +218,8 @@ public class IncidentEventService {
             }
 
             eventAssignment.setStatus(RequestStatus.valueOf(updateAssignmentDTO.getStatus()));
+
+            redisService.deleteEventAmbulanceAssignment(eventAmbulanceAssignmentId);
 
             EventAmbulanceAssignment updatedEventAssignment = eventAmbulanceAssignmentRepository.save(eventAssignment);
 
@@ -400,6 +404,7 @@ public class IncidentEventService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> patientPicked(Long eventId) {
         try {
             AmbulanceDriver driver = (AmbulanceDriver) authService.getCurrentUser();
@@ -441,6 +446,7 @@ public class IncidentEventService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> patientDropOff(Long eventId) {
         try {
             AmbulanceDriver driver = (AmbulanceDriver) authService.getCurrentUser();
@@ -482,7 +488,7 @@ public class IncidentEventService {
         }
     }
 
-
+    @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> updateLiveLocation(Long eventId, @Valid LocationDTO locationDTO) {
         try {
             AmbulanceDriver driver = (AmbulanceDriver) authService.getCurrentUser();
@@ -529,6 +535,7 @@ public class IncidentEventService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> cancelEvent(Long eventId) {
         try {
             Patient patient = (Patient) authService.getCurrentUser();
@@ -564,6 +571,7 @@ public class IncidentEventService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> getDriverActiveEvent() {
         try {
             AmbulanceDriver ambulanceDriver = (AmbulanceDriver) authService.getCurrentUser();
@@ -596,6 +604,7 @@ public class IncidentEventService {
         }
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAdmitRequestById(Long eventHospitalAssignmentId) {
         try {
             // Get the current authenticated HospitalAdmin
@@ -627,5 +636,10 @@ public class IncidentEventService {
             log.error("Error fetching admit request: {}", e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>(false, "Error fetching admit request", null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public Boolean isEventCompleted(IncidentEvent incidentEvent) {
+        return incidentEvent.getStatus() == EventStatus.PATIENT_PICKED
+                || incidentEvent.getStatus() == EventStatus.PATIENT_ADMITTED;
     }
 }

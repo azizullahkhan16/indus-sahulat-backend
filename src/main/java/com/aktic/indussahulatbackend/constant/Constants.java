@@ -1,6 +1,6 @@
 package com.aktic.indussahulatbackend.constant;
 
-public class SecurityConstants {
+public class Constants {
 
     // API Paths to bypass authentication in the filter
     public static final String[] FILTER_BYPASS_PATHS = {
@@ -22,4 +22,6 @@ public class SecurityConstants {
             "/webjars/**",
             "/swagger-ui.html",
     };
+
+    public static final int EVENT_AMBULANCE_ASSIGNMENT_TTL = 20;
 }

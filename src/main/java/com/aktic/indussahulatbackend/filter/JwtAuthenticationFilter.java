@@ -1,6 +1,6 @@
 package com.aktic.indussahulatbackend.filter;
 
-import com.aktic.indussahulatbackend.constant.SecurityConstants;
+import com.aktic.indussahulatbackend.constant.Constants;
 import com.aktic.indussahulatbackend.security.CustomUserDetailsService;
 import com.aktic.indussahulatbackend.service.jwt.JwtService;
 import jakarta.servlet.FilterChain;
@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -36,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         // Bypass filter for specific paths
-        for (String path : SecurityConstants.FILTER_BYPASS_PATHS) {
+        for (String path : Constants.FILTER_BYPASS_PATHS) {
             if (request.getServletPath().contains(path)) {
                 filterChain.doFilter(request, response);
                 return;

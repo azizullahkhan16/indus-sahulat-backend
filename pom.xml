@@ -32,6 +32,7 @@
         <mapStruct.version>1.6.3</mapStruct.version>
         <springSecurityMessaging.version>6.2.3</springSecurityMessaging.version>
         <jackson.version>2.18.3</jackson.version>
+        <jedis.version>5.2.0</jedis.version>
     </properties>
     <dependencies>
         <dependency>
@@ -113,6 +114,15 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
         </dependency>
     </dependencies>
 

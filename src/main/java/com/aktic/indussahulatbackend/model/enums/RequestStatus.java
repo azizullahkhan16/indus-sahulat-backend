@@ -4,4 +4,5 @@ public enum RequestStatus {
     REQUESTED,
     ACCEPTED,
     REJECTED,
+    EXPIRED,
 }

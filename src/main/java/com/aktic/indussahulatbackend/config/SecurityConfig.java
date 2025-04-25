@@ -1,6 +1,6 @@
 package com.aktic.indussahulatbackend.config;
 
-import com.aktic.indussahulatbackend.constant.SecurityConstants;
+import com.aktic.indussahulatbackend.constant.Constants;
 import com.aktic.indussahulatbackend.filter.JwtAuthenticationFilter;
 import com.aktic.indussahulatbackend.security.CustomAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class SecurityConfig {
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
-                        req.requestMatchers(SecurityConstants.WHITE_LIST_URL)
+                        req.requestMatchers(Constants.WHITE_LIST_URL)
                                 .permitAll()
                                 .requestMatchers("/chat/**").hasAnyRole("PATIENT", "AMBULANCE_DRIVER", "AMBULANCE_PROVIDER", "HOSPITAL_ADMIN")
                                 .requestMatchers("/api/patient/**").hasRole("PATIENT")

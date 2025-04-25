@@ -6,6 +6,7 @@ import com.aktic.indussahulatbackend.exception.customexceptions.AmbulanceProvide
 import com.aktic.indussahulatbackend.exception.customexceptions.DriverNotFoundException;
 import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.entity.*;
+import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.AmbulanceAssignmentRequest;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
@@ -35,8 +36,7 @@ import java.util.NoSuchElementException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AmbulanceAssignmentService
-{
+public class AmbulanceAssignmentService {
 
     private final SnowflakeIdGenerator idGenerator;
     private final AmbulanceAssignmentRepository ambulanceAssignmentRepository;
@@ -45,27 +45,23 @@ public class AmbulanceAssignmentService
     private final AmbulanceDriverRepository ambulanceDriverRepository;
     private final AuthService authService;
 
-    public ResponseEntity<ApiResponse<AmbulanceAssignmentDTO>> assignDriver(AmbulanceAssignmentRequest ambulanceAssignmentRequest)
-    {
-        try{
+    public ResponseEntity<ApiResponse<AmbulanceAssignmentDTO>> assignDriver(AmbulanceAssignmentRequest ambulanceAssignmentRequest) {
+        try {
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
             Long providerId = ambulanceProvider.getId();
-            AmbulanceProvider provider = ambulanceProviderRepository.findById(providerId).orElseThrow(()-> new AmbulanceProviderNotFoundException(AmbulanceProviderNotFoundException.DEFAULT_MESSAGE));
+            AmbulanceProvider provider = ambulanceProviderRepository.findById(providerId).orElseThrow(() -> new AmbulanceProviderNotFoundException(AmbulanceProviderNotFoundException.DEFAULT_MESSAGE));
             Long ambulanceId = ambulanceAssignmentRequest.getAmbulanceId();
-            Ambulance ambulance = ambulanceRepository.findById(ambulanceId).orElseThrow(()-> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
+            Ambulance ambulance = ambulanceRepository.findById(ambulanceId).orElseThrow(() -> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
             Long driverId = ambulanceAssignmentRequest.getDriverId();
-            AmbulanceDriver driver = ambulanceDriverRepository.findById(driverId).orElseThrow(()-> new DriverNotFoundException(DriverNotFoundException.DEFAULT_MESSAGE));
-            if (!ambulanceProvider.getCompany().getId().equals(driver.getCompany().getId()) || !ambulanceProvider.getCompany().getId().equals(ambulance.getCompany().getId()))
-            {
+            AmbulanceDriver driver = ambulanceDriverRepository.findById(driverId).orElseThrow(() -> new DriverNotFoundException(DriverNotFoundException.DEFAULT_MESSAGE));
+            if (!ambulanceProvider.getCompany().getId().equals(driver.getCompany().getId()) || !ambulanceProvider.getCompany().getId().equals(ambulance.getCompany().getId())) {
                 throw new NoSuchElementException("Cannot assign since your company does not matches with the ambulance or drivers company.");
             }
-            if (ambulanceAssignmentRepository.existsByAmbulanceDriverAndIsActiveTrue(driver))
-            {
-                return new ResponseEntity<>(new ApiResponse<>(false,"Driver already assigned",null), HttpStatus.NOT_FOUND);
+            if (ambulanceAssignmentRepository.existsByAmbulanceDriverAndIsActiveTrue(driver)) {
+                return new ResponseEntity<>(new ApiResponse<>(false, "Driver already assigned", null), HttpStatus.NOT_FOUND);
             }
-            if (ambulanceAssignmentRepository.existsByAmbulanceAndIsActiveTrue(ambulance))
-            {
-                return new ResponseEntity<>(new ApiResponse<>(false,"Ambulance already assigned",null), HttpStatus.NOT_FOUND);
+            if (ambulanceAssignmentRepository.existsByAmbulanceAndIsActiveTrue(ambulance)) {
+                return new ResponseEntity<>(new ApiResponse<>(false, "Ambulance already assigned", null), HttpStatus.NOT_FOUND);
             }
             AmbulanceAssignment ambulanceAssignment = AmbulanceAssignment.builder()
                     .id(idGenerator.nextId())
@@ -80,17 +76,15 @@ public class AmbulanceAssignmentService
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance Driver assigned successfully", ambulanceAssignmentDTO), HttpStatus.OK);  //Returning null cause cant return the ambulanceAssignment obj due to lazy.
         } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(new ApiResponse<>(false,e.getMessage(),null), HttpStatus.UNAUTHORIZED);
-        }
-        catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse<>(false, e.getMessage(), null), HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
             log.error("Error occurred while assigning ambulance drivers: {}", e.getMessage());
             return ResponseEntity.status(500).body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Page<AmbulanceAssignmentDTO>>> getAllActiveAssignments(Integer pageNumber, Integer limit)
-    {
+    public ResponseEntity<ApiResponse<Page<AmbulanceAssignmentDTO>>> getAllActiveAssignments(Integer pageNumber, Integer limit) {
         try {
             AmbulanceProvider provider = (AmbulanceProvider) authService.getCurrentUser();
             Company company = provider.getCompany();
@@ -100,15 +94,14 @@ public class AmbulanceAssignmentService
 
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-            Page<AmbulanceAssignment> ambulanceAssignments = ambulanceAssignmentRepository.findByIsActiveTrueAndAmbulanceCompanyId(company.getId(),pageable);
+            Page<AmbulanceAssignment> ambulanceAssignments = ambulanceAssignmentRepository.findByIsActiveTrueAndAmbulanceCompanyId(company.getId(), pageable);
 
             Page<AmbulanceAssignmentDTO> ambulanceAssignmentDTOPage = ambulanceAssignments.map(AmbulanceAssignmentDTO::new);
 
-            return new ResponseEntity<>(new ApiResponse<>(true,"Ambulance Assignments fetched successfully", ambulanceAssignmentDTOPage), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance Assignments fetched successfully", ambulanceAssignmentDTOPage), HttpStatus.OK);
         } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(new ApiResponse<>(false,e.getMessage(),null), HttpStatus.NOT_FOUND);
-        }
-        catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse<>(false, e.getMessage(), null), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
             log.error("Error occurred while retrieving active ambulance assignments: {}", e.getMessage());
             return ResponseEntity.status(500).body(new ApiResponse<>(false, e.getMessage(), null));
         }
@@ -142,12 +135,12 @@ public class AmbulanceAssignmentService
             AmbulanceAssignment ambulanceAssignment = ambulanceAssignmentRepository.findByAmbulanceDriverAndIsActiveTrue(driver);
 
             if (ambulanceAssignment == null) {
-                return new ResponseEntity<>(new ApiResponse<>(false,"No ambulance assigned yet.",null), HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>(new ApiResponse<>(false, "No ambulance assigned yet.", null), HttpStatus.NOT_FOUND);
             }
 
             AmbulanceAssignmentDTO ambulanceAssignmentDTO = new AmbulanceAssignmentDTO(ambulanceAssignment);
 
-            return new ResponseEntity<>(new ApiResponse<>(true,"Ambulance Assignment fetched successfully",ambulanceAssignmentDTO), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance Assignment fetched successfully", ambulanceAssignmentDTO), HttpStatus.OK);
 
         } catch (Exception e) {
             log.error("Error occurred while retrieving ambulance assignments: {}", e.getMessage());
@@ -157,7 +150,7 @@ public class AmbulanceAssignmentService
 
     @Transactional
     public ResponseEntity<ApiResponse<AmbulanceAssignmentDTO>> updateDriverLocation(LocationDTO locationDTO) {
-        try{
+        try {
             // find active ambulance assignment for the diver
             AmbulanceDriver driver = (AmbulanceDriver) authService.getCurrentUser();
 
@@ -173,9 +166,14 @@ public class AmbulanceAssignmentService
 
             return ResponseEntity.ok(new ApiResponse<>(true, "Driver location updated successfully", new AmbulanceAssignmentDTO(ambulanceAssignment)));
 
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error occurred while updating driver location: {}", e.getMessage());
             return ResponseEntity.status(500).body(new ApiResponse<>(false, "Internal Server Error", null));
         }
+    }
+
+    public Boolean isEventAmbulanceAssigned(EventAmbulanceAssignment eventAmbulanceAssignment) {
+        return eventAmbulanceAssignment.getStatus() == RequestStatus.ACCEPTED
+                || eventAmbulanceAssignment.getStatus() == RequestStatus.REQUESTED;
     }
 }

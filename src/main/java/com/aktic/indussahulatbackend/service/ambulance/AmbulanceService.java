@@ -17,8 +17,11 @@ import com.aktic.indussahulatbackend.repository.ambulance.AmbulanceRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
+import com.aktic.indussahulatbackend.service.ambulanceAssignment.AmbulanceAssignmentService;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
+import com.aktic.indussahulatbackend.service.incidentEvent.IncidentEventService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
+import com.aktic.indussahulatbackend.service.redis.RedisService;
 import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.JsonObjectConverter;
@@ -46,6 +49,9 @@ public class AmbulanceService {
     private final IncidentEventRepository incidentEventRepository;
     private final NotificationService notificationService;
     private final SocketService socketService;
+    private final IncidentEventService incidentEventService;
+    private final AmbulanceAssignmentService ambulanceAssignmentService;
+    private final RedisService redisService;
 
 //    public AmbulanceType determineCategory(FormRequest formRequest) {
 //        boolean isUnconscious = false;
@@ -231,9 +237,8 @@ public class AmbulanceService {
                 IncidentEvent event = eventAssignment.get().getEvent();
 
                 // If event is completed or cancelled, ambulance is available
-                if (event.getStatus() == EventStatus.PATIENT_ADMITTED
-                        || event.getStatus() == EventStatus.CANCELLED
-                        || eventAssignment.get().getStatus() == RequestStatus.REJECTED) {
+                if (incidentEventService.isEventCompleted(event)
+                        || ambulanceAssignmentService.isEventAmbulanceAssigned(eventAssignment.get())) {
                     availableAmbulances.add(new AmbulanceAssignmentDTO(assignment));
                 }
             }
@@ -272,13 +277,11 @@ public class AmbulanceService {
 
             // Check if this ambulance is already assigned to another active event
             Optional<EventAmbulanceAssignment> existingAssignment =
-                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignment(ambulanceAssignment);
+                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatus(ambulanceAssignment, RequestStatus.ACCEPTED);
 
             if (existingAssignment.isPresent()) {
                 IncidentEvent assignedEvent = existingAssignment.get().getEvent();
-                if (assignedEvent.getStatus() != EventStatus.PATIENT_ADMITTED
-                        && assignedEvent.getStatus() != EventStatus.CANCELLED
-                        && existingAssignment.get().getStatus() != RequestStatus.REJECTED) {
+                if (Boolean.TRUE.equals(incidentEventService.isEventCompleted(assignedEvent))) {
                     throw new IllegalStateException("Ambulance is already assigned to an active event");
                 }
             }
@@ -294,6 +297,8 @@ public class AmbulanceService {
                     .build();
 
             EventAmbulanceAssignment savedAssignment = eventAmbulanceAssignmentRepository.save(eventAmbulanceAssignment);
+
+            redisService.saveEventAmbulanceAssignment(savedAssignment);
 
             EventAmbulanceAssignmentDTO eventAmbulanceResponse = new EventAmbulanceAssignmentDTO(savedAssignment);
 
