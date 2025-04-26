@@ -24,4 +24,6 @@ public class Constants {
     };
 
     public static final int EVENT_AMBULANCE_ASSIGNMENT_TTL = 20;
+    public static final int EVENT_HOSPITAL_ASSIGNMENT_TTL = 20;
+
 }

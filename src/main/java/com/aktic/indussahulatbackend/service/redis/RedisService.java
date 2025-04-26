@@ -9,6 +9,7 @@ import com.aktic.indussahulatbackend.model.redis.RedisEventAmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.request.NotificationRequestDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
+import com.aktic.indussahulatbackend.model.response.RedisEventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.redis.RedisEventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -69,21 +71,11 @@ public class RedisService {
                 return;
             }
 
-            // Fetch the EventAmbulanceAssignment from the database
-            Optional<EventAmbulanceAssignment> assignmentOptional = eventAmbulanceAssignmentRepository.findById(id);
-
-            if (!assignmentOptional.isPresent()) {
-                log.warn("EventAmbulanceAssignment with ID {} not found.", id);
-                return;
-            }
-
-            EventAmbulanceAssignment assignment = assignmentOptional.get();
-
-            assignment.getEvent().setStatus(EventStatus.QUESTIONNAIRE_FILLED);
-            assignment.setStatus(RequestStatus.EXPIRED);
-
-            // Save the updated assignment back to the database
-            assignment = eventAmbulanceAssignmentRepository.save(assignment);
+            EventAmbulanceAssignment assignment = eventAmbulanceAssignmentRepository.updateStatusAndEventStatus(
+                    id,
+                    RequestStatus.EXPIRED.name(),
+                    EventStatus.QUESTIONNAIRE_FILLED.name()
+            ).orElseThrow(() -> new NoSuchElementException("EventAmbulanceAssignment not found with ID: " + id));
 
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(assignment.getAmbulanceProvider().getId())

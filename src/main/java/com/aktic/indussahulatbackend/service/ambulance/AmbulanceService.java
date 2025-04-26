@@ -277,7 +277,10 @@ public class AmbulanceService {
 
             // Check if this ambulance is already assigned to another active event
             Optional<EventAmbulanceAssignment> existingAssignment =
-                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatus(ambulanceAssignment, RequestStatus.ACCEPTED);
+                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatusIn(
+                            ambulanceAssignment,
+                            List.of(RequestStatus.REQUESTED, RequestStatus.ACCEPTED)
+                    );
 
             if (existingAssignment.isPresent()) {
                 IncidentEvent assignedEvent = existingAssignment.get().getEvent();
