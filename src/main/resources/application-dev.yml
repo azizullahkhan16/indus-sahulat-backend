@@ -35,14 +35,14 @@ server:
 logging:
   level:
     root: info
-    org:
-      springframework:
-        transaction:
-          interceptor: trace
-      hibernate:
-        SQL: debug
-        orm.jdbc:
-          binding: trace
+#    org:
+#      springframework:
+#        transaction:
+#          interceptor: trace
+#      hibernate:
+#        SQL: debug
+#        orm.jdbc:
+#          binding: trace
 
 application:
   security:

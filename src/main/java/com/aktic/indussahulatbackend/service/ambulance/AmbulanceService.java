@@ -301,7 +301,7 @@ public class AmbulanceService {
 
             EventAmbulanceAssignment savedAssignment = eventAmbulanceAssignmentRepository.save(eventAmbulanceAssignment);
 
-            redisService.saveEventAmbulanceAssignment(savedAssignment);
+            redisService.saveEventAmbulanceAssignment(savedAssignment.getId());
 
             EventAmbulanceAssignmentDTO eventAmbulanceResponse = new EventAmbulanceAssignmentDTO(savedAssignment);
 

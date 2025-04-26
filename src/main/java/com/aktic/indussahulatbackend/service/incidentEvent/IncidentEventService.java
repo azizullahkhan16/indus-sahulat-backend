@@ -374,6 +374,8 @@ public class IncidentEventService {
                 eventAssignment.getEvent().setDropOffLocation(eventAssignment.getHospital().getAddress());
             }
 
+            redisService.deleteEventHospitalAssignment(eventHospitalAssignmentId);
+
             EventHospitalAssignment updatedEventAssignment = eventHospitalAssignmentRepository.save(eventAssignment);
 
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()

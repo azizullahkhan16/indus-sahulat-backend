@@ -14,6 +14,7 @@ import com.aktic.indussahulatbackend.repository.hospital.HospitalRepository;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
+import com.aktic.indussahulatbackend.service.redis.RedisService;
 import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.JsonObjectConverter;
@@ -40,6 +41,7 @@ public class HospitalService {
     private final EventHospitalAssignmentRepository eventHospitalAssignmentRepository;
     private final NotificationService notificationService;
     private final SocketService socketService;
+    private final RedisService redisService;
 
     public ResponseEntity<ApiResponse<List<Hospital>>> getAllHospitals() {
         List<Hospital> hospitals = hospitalRepository.findAll();
@@ -72,8 +74,8 @@ public class HospitalService {
 
             // verify if the request is already sent with status as REQUESTED
             Optional<EventHospitalAssignment> existingHospitalAssignment =
-                    eventHospitalAssignmentRepository.findByEventAndHospitalAndStatus(
-                            event, hospital, RequestStatus.REQUESTED);
+                    eventHospitalAssignmentRepository.findByEventAndHospitalAndStatusIn(
+                            event, hospital, List.of(RequestStatus.REQUESTED, RequestStatus.ACCEPTED));
 
             if (existingHospitalAssignment.isPresent()) {
                 return new ResponseEntity<>(
@@ -87,6 +89,9 @@ public class HospitalService {
                     .build();
 
             eventHospitalAssignment = eventHospitalAssignmentRepository.save(eventHospitalAssignment);
+
+            redisService.saveEventHospitalAssignment(eventHospitalAssignment.getId());
+
             EventHospitalAssignmentDTO eventHospitalAssignmentDTO = new EventHospitalAssignmentDTO(eventHospitalAssignment);
 
             // Notify the hospital about the admit request
