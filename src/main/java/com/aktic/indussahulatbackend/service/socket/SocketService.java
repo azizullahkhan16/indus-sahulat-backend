@@ -1,13 +1,19 @@
 package com.aktic.indussahulatbackend.service.socket;
 
+import com.aktic.indussahulatbackend.constant.Constants;
 import com.aktic.indussahulatbackend.constant.SocketEndpoint;
 import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.entity.IncidentEvent;
 import com.aktic.indussahulatbackend.model.entity.Notification;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
+import com.aktic.indussahulatbackend.model.redis.RedisEventLiveLocation;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
+import com.aktic.indussahulatbackend.repository.redis.RedisEventLiveLocationRepository;
+import com.aktic.indussahulatbackend.service.redis.RedisService;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -24,21 +30,15 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SocketService {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final IncidentEventRepository incidentEventRepository;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private final ConcurrentHashMap<Long, AtomicReference<LocationDTO>> pendingUpdates = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Long, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
+    private final Cache<Long, Location> inMemoryCache = Caffeine.newBuilder()
+            .maximumSize(Constants.MAX_ACTIVE_INCIDENT_EVENTS)
+            .build();
+    private final RedisService redisService;
 
     public void sendUpdatedEvent(IncidentEventDTO incidentEvent) {
         try {
             log.info("Sending updated event: {}", incidentEvent);
             messagingTemplate.convertAndSend(SocketEndpoint.INCIDENT_EVENT_UPDATE.getPath() + incidentEvent.getId(), incidentEvent);
-
-            // Handle event termination
-            if (incidentEvent.getStatus().equals(EventStatus.PATIENT_ADMITTED.name())
-                    || incidentEvent.getStatus().equals(EventStatus.CANCELLED.name())) {
-                handleEventTermination(incidentEvent);
-            }
         } catch (Exception e) {
             log.error("Error sending updated event: {}", e.getMessage(), e);
         }
@@ -46,54 +46,24 @@ public class SocketService {
 
     public void updateLiveLocation(Long eventId, LocationDTO locationDTO) {
         try {
-            // Debounce persistence
-            pendingUpdates.computeIfAbsent(eventId, k -> new AtomicReference<>()).set(locationDTO);
-
-            // Cancel existing task if any
-            ScheduledFuture<?> existingTask = scheduledTasks.get(eventId);
-            if (existingTask != null) {
-                existingTask.cancel(false);
-            }
-
-            // Schedule new task
-            ScheduledFuture<?> newTask = scheduler.schedule(() -> saveLocation(eventId), 10, TimeUnit.SECONDS);
-            scheduledTasks.put(eventId, newTask);
-
+            log.info("Updating live location for event ID: {}", eventId);
             messagingTemplate.convertAndSend(SocketEndpoint.INCIDENT_EVENT_LIVE_LOCATION.getPath() + eventId, locationDTO);
 
+            Location prevLocation = inMemoryCache.getIfPresent(eventId);
+
+            if (prevLocation != null) {
+                double distance = calculateDistance(prevLocation, new Location(locationDTO.getLatitude(), locationDTO.getLongitude()));
+
+                if (distance < Constants.DISTANCE_THRESHOLD_METERS) {
+                    return;
+                }
+            }
+
+            redisService.saveEventLiveLocation(eventId, new Location(locationDTO.getLatitude(), locationDTO.getLongitude()));
+
+            inMemoryCache.put(eventId, new Location(locationDTO.getLatitude(), locationDTO.getLongitude()));
         } catch (Exception e) {
             log.error("Error updating live location: {}", e.getMessage(), e);
-        }
-    }
-
-    @Transactional
-    public void saveLocation(Long eventId) {
-        try {
-            AtomicReference<LocationDTO> locationRef = pendingUpdates.get(eventId);
-            if (locationRef == null) {
-                return; // No updates to save
-            }
-
-            LocationDTO locationDTO = locationRef.get();
-            if (locationDTO == null) {
-                return;
-            }
-
-            IncidentEvent event = incidentEventRepository.findById(eventId)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid event ID"));
-
-            event.setLiveLocation(new Location(locationDTO.getLatitude(), locationDTO.getLongitude()));
-            incidentEventRepository.save(event);
-
-            log.info("Saved debounced location for event {}: lat={}, lon={}", eventId, locationDTO.getLatitude(), locationDTO.getLongitude());
-
-            // Clean up
-            pendingUpdates.remove(eventId);
-            scheduledTasks.remove(eventId);
-
-        } catch (Exception e) {
-            log.error("Error saving debounced location for event {}: {}", eventId, e.getMessage(), e);
-            // Keep pending update for retry if needed
         }
     }
 
@@ -125,24 +95,25 @@ public class SocketService {
         }
     }
 
-    private void handleEventTermination(IncidentEventDTO incidentEventDTO) {
-        try {
-            if (!incidentEventDTO.getStatus().equals(EventStatus.PATIENT_ADMITTED.name())
-                    && !incidentEventDTO.getStatus().equals(EventStatus.CANCELLED.name())) {
-                log.info("Event can not terminated {}", incidentEventDTO.getId());
-                return;
-            }
 
-            // Clean up pending updates and tasks
-            pendingUpdates.remove(incidentEventDTO.getId());
-            ScheduledFuture<?> task = scheduledTasks.remove(incidentEventDTO.getId());
-            if (task != null) {
-                task.cancel(false);
-            }
+    private double calculateDistance(Location prevLocation, Location currentLocation) {
+        final int EARTH_RADIUS = 6371000; // meters
 
-            log.info("Terminated event {}", incidentEventDTO.getId());
-        } catch (Exception e) {
-            log.error("Error handling event termination: {}", e.getMessage(), e);
-        }
+        double lat1 = prevLocation.getLatitude();
+        double lon1 = prevLocation.getLongitude();
+        double lat2 = currentLocation.getLatitude();
+        double lon2 = currentLocation.getLongitude();
+
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS * c;
     }
+
 }

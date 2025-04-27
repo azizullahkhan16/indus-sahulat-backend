@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface EventAmbulanceAssignmentRepository extends JpaRepository<EventAmbulanceAssignment, Long> {
@@ -44,4 +45,8 @@ public interface EventAmbulanceAssignmentRepository extends JpaRepository<EventA
     );
 
     Optional<EventAmbulanceAssignment> findByAmbulanceAssignmentAndStatusIn(AmbulanceAssignment ambulanceAssignment, List<RequestStatus> requested);
+
+    Optional<EventAmbulanceAssignment> findByAmbulanceAssignmentAndStatusInAndEventStatusNotIn(AmbulanceAssignment ambulanceAssignment, List<RequestStatus> requested, List<EventStatus> patientAdmitted);
+
+    List<EventAmbulanceAssignment> findByAmbulanceAssignmentIdInAndStatus(Set<Long> assignmentIds, RequestStatus requestStatus);
 }

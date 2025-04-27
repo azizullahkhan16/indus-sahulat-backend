@@ -1,5 +1,6 @@
 package com.aktic.indussahulatbackend.service.redis;
 
+import com.aktic.indussahulatbackend.model.common.Location;
 import com.aktic.indussahulatbackend.model.entity.EventAmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.entity.EventHospitalAssignment;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
@@ -8,6 +9,7 @@ import com.aktic.indussahulatbackend.model.enums.ReceiverType;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.redis.RedisEventAmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.redis.RedisEventHospitalAssignment;
+import com.aktic.indussahulatbackend.model.redis.RedisEventLiveLocation;
 import com.aktic.indussahulatbackend.model.request.NotificationRequestDTO;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventHospitalAssignmentDTO;
@@ -16,17 +18,19 @@ import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAm
 import com.aktic.indussahulatbackend.repository.eventHospitalAssignment.EventHospitalAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.redis.RedisEventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.redis.RedisEventHospitalAssignmentRepository;
+import com.aktic.indussahulatbackend.repository.redis.RedisEventLiveLocationRepository;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.service.socket.SocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class RedisService {
     private final RedisEventAmbulanceAssignmentRepository redisEventAmbulanceAssignmentRepository;
@@ -35,6 +39,26 @@ public class RedisService {
     private final SocketService socketService;
     private final RedisEventHospitalAssignmentRepository redisEventHospitalAssignmentRepository;
     private final EventHospitalAssignmentRepository eventHospitalAssignmentRepository;
+    private final RedisEventLiveLocationRepository redisEventLiveLocationRepository;
+
+    @Autowired
+    public RedisService(
+            RedisEventAmbulanceAssignmentRepository redisEventAmbulanceAssignmentRepository,
+            EventAmbulanceAssignmentRepository eventAmbulanceAssignmentRepository,
+            @Lazy NotificationService notificationService,
+            @Lazy SocketService socketService,
+            RedisEventHospitalAssignmentRepository redisEventHospitalAssignmentRepository,
+            EventHospitalAssignmentRepository eventHospitalAssignmentRepository,
+            RedisEventLiveLocationRepository redisEventLiveLocationRepository
+    ) {
+        this.redisEventAmbulanceAssignmentRepository = redisEventAmbulanceAssignmentRepository;
+        this.eventAmbulanceAssignmentRepository = eventAmbulanceAssignmentRepository;
+        this.notificationService = notificationService;
+        this.socketService = socketService;
+        this.redisEventHospitalAssignmentRepository = redisEventHospitalAssignmentRepository;
+        this.eventHospitalAssignmentRepository = eventHospitalAssignmentRepository;
+        this.redisEventLiveLocationRepository = redisEventLiveLocationRepository;
+    }
 
     @Transactional
     public void saveEventAmbulanceAssignment(Long ambulanceAssignmentId) {
@@ -65,6 +89,21 @@ public class RedisService {
     }
 
     @Transactional
+    public void saveEventLiveLocation(Long eventId, Location liveLocation) {
+        try {
+            RedisEventLiveLocation redisEventLiveLocation = RedisEventLiveLocation.builder()
+                    .eventId(eventId)
+                    .liveLocation(liveLocation)
+                    .build();
+
+            redisEventLiveLocationRepository.save(redisEventLiveLocation);
+            log.info("Live location updated for EventAmbulanceAssignment with ID: {}", eventId);
+        } catch (Exception e) {
+            log.error("Error updating live location for EventAmbulanceAssignment", e);
+        }
+    }
+
+    @Transactional
     public void deleteEventAmbulanceAssignment(Long id) {
         try {
             redisEventAmbulanceAssignmentRepository.deleteById(id);
@@ -81,6 +120,16 @@ public class RedisService {
             log.info("EventHospitalAssignment with ID {} deleted from Redis", id);
         } catch (Exception e) {
             log.error("Error deleting EventHospitalAssignment from Redis", e);
+        }
+    }
+
+    @Transactional
+    public void deleteEventLiveLocation(Long eventId) {
+        try {
+            redisEventLiveLocationRepository.deleteById(eventId);
+            log.info("Live location for EventAmbulanceAssignment with ID {} deleted from Redis", eventId);
+        } catch (Exception e) {
+            log.error("Error deleting live location for EventAmbulanceAssignment", e);
         }
     }
 

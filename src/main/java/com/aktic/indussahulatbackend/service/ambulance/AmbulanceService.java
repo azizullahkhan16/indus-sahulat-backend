@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -212,36 +213,25 @@ public class AmbulanceService {
             // Get the company associated with the AmbulanceProvider
             Company providerCompany = ambulanceProvider.getCompany();
 
-            // 1. Get all ambulance assignments for the provider's company
+            // 1. Get all active ambulance assignments for the provider's company
             List<AmbulanceAssignment> allAssignments = ambulanceAssignmentRepository
                     .findByAmbulanceProviderCompanyAndIsActiveTrue(providerCompany);
             if (allAssignments.isEmpty()) {
                 throw new NoSuchElementException("No ambulance assignments found for this company.");
             }
-            // 2. Filter available ambulances
-            List<AmbulanceAssignmentDTO> availableAmbulances = new ArrayList<>();
 
-            for (AmbulanceAssignment assignment : allAssignments) {
-                // Check if this assignment is linked to any event
-                Optional<EventAmbulanceAssignment> eventAssignment =
-                        eventAmbulanceAssignmentRepository
-                                .findByAmbulanceAssignmentAndStatus(assignment, RequestStatus.REJECTED);
+            // 2. Get all event ambulance assignments with status REJECTED for this company in a single query
+            Set<Long> assignmentIds = allAssignments.stream()
+                    .map(AmbulanceAssignment::getId)
+                    .collect(Collectors.toSet());
+            List<EventAmbulanceAssignment> rejectedAssignments = eventAmbulanceAssignmentRepository
+                    .findByAmbulanceAssignmentIdInAndStatus(assignmentIds, RequestStatus.REJECTED);
 
-                // If no event assignment exists, ambulance is available
-                if (eventAssignment.isEmpty()) {
-                    availableAmbulances.add(new AmbulanceAssignmentDTO(assignment));
-                    continue;
-                }
-
-                // If there is an event assignment, check the event status
-                IncidentEvent event = eventAssignment.get().getEvent();
-
-                // If event is completed or cancelled, ambulance is available
-                if (incidentEventService.isEventCompleted(event)
-                        || ambulanceAssignmentService.isEventAmbulanceAssigned(eventAssignment.get())) {
-                    availableAmbulances.add(new AmbulanceAssignmentDTO(assignment));
-                }
-            }
+            // 3. Filter available ambulances
+            List<AmbulanceAssignmentDTO> availableAmbulances = allAssignments.stream()
+                    .filter(assignment -> isAvailable(assignment, rejectedAssignments))
+                    .map(AmbulanceAssignmentDTO::new)
+                    .collect(Collectors.toList());
 
             // Return successful response with available ambulances
             return ResponseEntity.ok(
@@ -254,9 +244,25 @@ public class AmbulanceService {
                     .body(new ApiResponse<>(false, e.getMessage(), null));
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(false, e.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "An unexpected error occurred", null));
         }
+    }
+
+    private boolean isAvailable(AmbulanceAssignment assignment, List<EventAmbulanceAssignment> rejectedAssignments) {
+        Optional<EventAmbulanceAssignment> eventAssignmentOpt = rejectedAssignments.stream()
+                .filter(eventAssignment -> eventAssignment.getAmbulanceAssignment().equals(assignment))
+                .findFirst();
+
+        if (eventAssignmentOpt.isEmpty()) {
+            return true; // If no event assignment exists, the ambulance is available
+        }
+
+        EventAmbulanceAssignment eventAssignment = eventAssignmentOpt.get();
+        IncidentEvent event = eventAssignment.getEvent();
+
+        // If the event is completed, cancelled, or the ambulance is already assigned, it is available
+        return incidentEventService.isEventCompleted(event) || ambulanceAssignmentService.isEventAmbulanceAssigned(eventAssignment);
     }
 
     @Transactional
@@ -277,16 +283,14 @@ public class AmbulanceService {
 
             // Check if this ambulance is already assigned to another active event
             Optional<EventAmbulanceAssignment> existingAssignment =
-                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatusIn(
+                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatusInAndEventStatusNotIn(
                             ambulanceAssignment,
-                            List.of(RequestStatus.REQUESTED, RequestStatus.ACCEPTED)
+                            List.of(RequestStatus.REQUESTED, RequestStatus.ACCEPTED),
+                            List.of(EventStatus.PATIENT_ADMITTED, EventStatus.CANCELLED)
                     );
 
             if (existingAssignment.isPresent()) {
-                IncidentEvent assignedEvent = existingAssignment.get().getEvent();
-                if (Boolean.TRUE.equals(incidentEventService.isEventCompleted(assignedEvent))) {
-                    throw new IllegalStateException("Ambulance is already assigned to an active event");
-                }
+                throw new IllegalStateException("Ambulance is already assigned to an active event");
             }
 
             event.nextState(new AmbulanceAssignedState());

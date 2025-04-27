@@ -33,6 +33,7 @@
         <springSecurityMessaging.version>6.2.3</springSecurityMessaging.version>
         <jackson.version>2.18.3</jackson.version>
         <jedis.version>5.2.0</jedis.version>
+        <caffeine.version>3.2.0</caffeine.version>
     </properties>
     <dependencies>
         <dependency>
@@ -123,6 +124,11 @@
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>${jedis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>${caffeine.version}</version>
         </dependency>
     </dependencies>
 

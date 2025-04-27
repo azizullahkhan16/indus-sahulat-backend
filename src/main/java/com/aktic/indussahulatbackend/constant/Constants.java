@@ -26,4 +26,7 @@ public class Constants {
     public static final int EVENT_AMBULANCE_ASSIGNMENT_TTL = 20;
     public static final int EVENT_HOSPITAL_ASSIGNMENT_TTL = 20;
 
+    public static final long MAX_ACTIVE_INCIDENT_EVENTS = 10_000;
+    public static final double DISTANCE_THRESHOLD_METERS = 500;
+
 }

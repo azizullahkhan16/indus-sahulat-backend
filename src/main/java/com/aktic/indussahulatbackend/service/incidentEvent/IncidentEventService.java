@@ -473,6 +473,8 @@ public class IncidentEventService {
             incidentEvent.setDropOffTime(Instant.now());
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
+            redisService.deleteEventLiveLocation(eventId);
+
             IncidentEventDTO incidentEventDTO = new IncidentEventDTO(updatedEvent);
 
             socketService.sendUpdatedEvent(incidentEventDTO);
@@ -552,6 +554,8 @@ public class IncidentEventService {
             // Update the event status
             incidentEvent.cancelEvent();
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
+
+            redisService.deleteEventLiveLocation(eventId);
 
             IncidentEventDTO incidentEventDTO = new IncidentEventDTO(updatedEvent);
 
@@ -641,7 +645,7 @@ public class IncidentEventService {
     }
 
     public Boolean isEventCompleted(IncidentEvent incidentEvent) {
-        return incidentEvent.getStatus() == EventStatus.PATIENT_PICKED
+        return incidentEvent.getStatus() == EventStatus.CANCELLED
                 || incidentEvent.getStatus() == EventStatus.PATIENT_ADMITTED;
     }
 }
