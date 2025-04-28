@@ -471,6 +471,9 @@ public class IncidentEventService {
             // Update the event status
             incidentEvent.nextState(new PatientAdmittedState());
             incidentEvent.setDropOffTime(Instant.now());
+
+            incidentEvent.setLiveLocation(redisService.getEventLiveLocation(eventId));
+
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
             redisService.deleteEventLiveLocation(eventId);

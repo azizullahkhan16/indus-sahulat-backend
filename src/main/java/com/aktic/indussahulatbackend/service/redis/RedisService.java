@@ -104,6 +104,19 @@ public class RedisService {
     }
 
     @Transactional
+    public Location getEventLiveLocation(Long eventId) {
+        try {
+            RedisEventLiveLocation redisEventLiveLocation = redisEventLiveLocationRepository.findById(eventId)
+                    .orElseThrow(() -> new NoSuchElementException("Live location not found for EventAmbulanceAssignment with ID: " + eventId));
+
+            return redisEventLiveLocation.getLiveLocation();
+        } catch (Exception e) {
+            log.error("Error fetching live location for EventAmbulanceAssignment", e);
+            return null;
+        }
+    }
+
+    @Transactional
     public void deleteEventAmbulanceAssignment(Long id) {
         try {
             redisEventAmbulanceAssignmentRepository.deleteById(id);
