@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -43,45 +44,101 @@ public class HospitalService {
     private final SocketService socketService;
     private final RedisService redisService;
 
-    public ResponseEntity<ApiResponse<List<Hospital>>> getAllHospitals() {
-        List<Hospital> hospitals = hospitalRepository.findAll();
-        if (hospitals.isEmpty()) {
-            return new ResponseEntity<>(new ApiResponse<>(false, "No Hospitals available", null), HttpStatus.NOT_FOUND);
+    @Transactional
+    public ResponseEntity<ApiResponse<List<Hospital>>> getAllHospitals(Long eventId) {
+        try {
+            List<Hospital> hospitals;
+
+            if (eventId != null) {
+                IncidentEvent incidentEvent = incidentEventRepository.findById(eventId)
+                        .orElseThrow(() -> new NoSuchElementException("Event not found"));
+
+                List<Hospital> preferredHospitals = incidentEvent.getPatientPreferredHospitals();
+
+                if (preferredHospitals != null && !preferredHospitals.isEmpty()) {
+                    hospitals = preferredHospitals;
+                } else {
+                    hospitals = hospitalRepository.findAll();
+                }
+            } else {
+                hospitals = hospitalRepository.findAll();
+            }
+
+            if (hospitals.isEmpty()) {
+                return new ResponseEntity<>(new ApiResponse<>(false, "No hospitals available", null), HttpStatus.NOT_FOUND);
+            }
+
+            return new ResponseEntity<>(new ApiResponse<>(true, "Hospitals fetched successfully", hospitals), HttpStatus.OK);
+
+        } catch (NoSuchElementException e) {
+            log.error("Event not found: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, e.getMessage(), null), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            log.error("Error occurred while fetching hospitals: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, "Failed to fetch hospitals", null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(new ApiResponse<>(true, "Hospitals fetched successfully", hospitals), HttpStatus.OK);
     }
 
+
+    @Transactional
     public ResponseEntity<ApiResponse<EventHospitalAssignmentDTO>> sendAdmitRequest(SendAdmitRequestDTO sendAdmitRequestDTO) {
         try {
             AmbulanceDriver driver = (AmbulanceDriver) authService.getCurrentUser();
 
-            Hospital hospital = hospitalRepository.findById(sendAdmitRequestDTO.getHospitalId())
-                    .orElseThrow(() -> new NoSuchElementException("Hospital not found"));
-
-
             IncidentEvent event = incidentEventRepository.findById(sendAdmitRequestDTO.getEventId())
                     .orElseThrow(() -> new NoSuchElementException("Event not found"));
 
-            if (!event.getStatus().equals(EventStatus.DRIVER_ARRIVED)) {
-                return new ResponseEntity<>(new ApiResponse<>(false, "Event is not in a state to send admit request", null), HttpStatus.BAD_REQUEST);
-            }
-
             EventAmbulanceAssignment eventAmbulanceAssignment = event.getAmbulanceAssignment();
 
-            if (eventAmbulanceAssignment != null && !eventAmbulanceAssignment.getAmbulanceAssignment().getAmbulanceDriver().getId().equals(driver.getId())) {
+            // Check if driver is authorized
+            if (eventAmbulanceAssignment == null || !eventAmbulanceAssignment.getAmbulanceAssignment().getAmbulanceDriver().getId().equals(driver.getId())) {
                 return new ResponseEntity<>(new ApiResponse<>(false, "You are not authorized to send admit request for this event", null), HttpStatus.UNAUTHORIZED);
             }
 
-            // verify if the request is already sent with status as REQUESTED
+            // Event must be at least DRIVER_ACCEPTED
+            if (event.getStatus().compareTo(EventStatus.DRIVER_ACCEPTED) < 0) {
+                return new ResponseEntity<>(new ApiResponse<>(false, "Hospital selection allowed only after driver accepted the event", null), HttpStatus.BAD_REQUEST);
+            }
+
+            Hospital hospital = hospitalRepository.findById(sendAdmitRequestDTO.getHospitalId())
+                    .orElseThrow(() -> new NoSuchElementException("Hospital not found"));
+
+            List<Hospital> preferredHospitals = event.getPatientPreferredHospitals(); // Assume a getter is available
+
+            boolean preferencesNullified = false;
+
+            if (preferredHospitals != null && !preferredHospitals.isEmpty()) {
+                // Check if all preferred hospitals have their requests rejected
+                List<EventHospitalAssignment> preferredAssignments = eventHospitalAssignmentRepository.findByEventAndHospitalIn(event, preferredHospitals);
+                System.out.println(preferredAssignments);
+                if (preferredAssignments.size() == preferredHospitals.size()) {
+                    preferencesNullified = preferredAssignments.stream()
+                            .allMatch(a -> a.getStatus() == RequestStatus.REJECTED);
+                }
+
+                if (!preferencesNullified) {
+                    // Preferences are still active
+                    if (!preferredHospitals.contains(hospital)) {
+                        return new ResponseEntity<>(new ApiResponse<>(false, "Hospital is not among patient's preferred hospitals", null), HttpStatus.BAD_REQUEST);
+                    }
+                }
+            } else {
+                // No preferences set
+                if (!event.getStatus().equals(EventStatus.DRIVER_ARRIVED)) {
+                    return new ResponseEntity<>(new ApiResponse<>(false, "Hospital selection allowed only after driver arrival when no patient preference exists", null), HttpStatus.BAD_REQUEST);
+                }
+            }
+
+            // Check if admit request already sent
             Optional<EventHospitalAssignment> existingHospitalAssignment =
                     eventHospitalAssignmentRepository.findByEventAndHospitalAndStatusIn(
                             event, hospital, List.of(RequestStatus.REQUESTED, RequestStatus.ACCEPTED));
 
             if (existingHospitalAssignment.isPresent()) {
-                return new ResponseEntity<>(
-                        new ApiResponse<>(false, "Admit request already sent", null),
-                        HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new ApiResponse<>(false, "Admit request already sent to this hospital", null), HttpStatus.BAD_REQUEST);
             }
+
+            // Create new admit request
             EventHospitalAssignment eventHospitalAssignment = EventHospitalAssignment.builder()
                     .id(idGenerator.nextId())
                     .hospital(hospital)
@@ -94,7 +151,7 @@ public class HospitalService {
 
             EventHospitalAssignmentDTO eventHospitalAssignmentDTO = new EventHospitalAssignmentDTO(eventHospitalAssignment);
 
-            // Notify the hospital about the admit request
+            // Notify hospital admin
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(eventHospitalAssignment.getHospital().getId())
                     .receiverType(ReceiverType.HOSPITAL_ADMIN)
@@ -104,13 +161,13 @@ public class HospitalService {
 
             notificationService.sendNotification(notificationRequestDTO);
 
+            // Notify through socket
             Map<String, Object> admitRequestMap = Map.of(
                     "event", new IncidentEventDTO(eventHospitalAssignment.getEvent()),
                     "eventHospitalAssignment", eventHospitalAssignmentDTO
             );
 
             socketService.sendNewAdmitRequest(admitRequestMap);
-
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Admit request sent successfully", eventHospitalAssignmentDTO), HttpStatus.OK);
 
@@ -123,6 +180,8 @@ public class HospitalService {
         }
     }
 
+
+    @Transactional
     public ResponseEntity<ApiResponse<EventHospitalAssignmentDTO>> getAdmitRequestInfo(Long eventHospitalAssignmentId) {
         try {
             EventHospitalAssignment eventHospitalAssignment = eventHospitalAssignmentRepository.findById(eventHospitalAssignmentId)

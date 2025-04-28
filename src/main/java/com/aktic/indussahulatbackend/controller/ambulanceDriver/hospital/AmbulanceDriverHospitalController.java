@@ -16,29 +16,26 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/ambulance-driver")
 @RequiredArgsConstructor
-public class AmbulanceDriverHospitalController
-{
+public class AmbulanceDriverHospitalController {
     private final HospitalService hospitalService;
 
     @GetMapping("/get-hospitals")
-    public ResponseEntity<ApiResponse<List<Hospital>>> getAllHospitals()
-    {
-        return hospitalService.getAllHospitals();
+    public ResponseEntity<ApiResponse<List<Hospital>>> getAllHospitals(@RequestParam(required = false) Long eventId) {
+
+        return hospitalService.getAllHospitals(eventId);
     }
 
     @PostMapping("/send-admit-request")
     public ResponseEntity<ApiResponse<EventHospitalAssignmentDTO>> sendAdmitRequest(
             @Valid @RequestBody SendAdmitRequestDTO sendAdmitRequestDTO
-            )
-    {
+    ) {
         return hospitalService.sendAdmitRequest(sendAdmitRequestDTO);
     }
 
     @GetMapping("/get-admit-request/{eventHospitalAssignmentId}")
     public ResponseEntity<ApiResponse<EventHospitalAssignmentDTO>> getAdmitRequest(
             @PathVariable Long eventHospitalAssignmentId
-            )
-    {
+    ) {
         return hospitalService.getAdmitRequestInfo(eventHospitalAssignmentId);
     }
 }

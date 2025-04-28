@@ -45,9 +45,8 @@ public class EventHospitalAssignment {
     private Instant updatedAt;
 
     @PrePersist
-    protected void onCreate() {
-        if (status == null)
-        {
+    private void onCreate() {
+        if (status == null) {
             this.status = RequestStatus.REQUESTED;
         }
     }

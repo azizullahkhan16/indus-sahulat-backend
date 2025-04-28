@@ -12,6 +12,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,6 +32,7 @@ public class IncidentEventDTO {
     private Instant pickupTime;
     private Instant dropOffTime;
     private Location liveLocation;
+    private List<HospitalDTO> patientPreferredHospitals;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -46,6 +49,14 @@ public class IncidentEventDTO {
         this.pickupTime = incidentEvent.getPickupTime();
         this.dropOffTime = incidentEvent.getDropOffTime();
         this.liveLocation = incidentEvent.getLiveLocation();
+
+        // Fix for patientPreferredHospital (convert list)
+        this.patientPreferredHospitals = incidentEvent.getPatientPreferredHospitals() != null
+                ? incidentEvent.getPatientPreferredHospitals().stream()
+                .map(HospitalDTO::new)
+                .collect(Collectors.toList())
+                : null;
+
         this.createdAt = incidentEvent.getCreatedAt();
         this.updatedAt = incidentEvent.getUpdatedAt();
     }

@@ -7,10 +7,7 @@ import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
 import com.aktic.indussahulatbackend.model.enums.ReceiverType;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
-import com.aktic.indussahulatbackend.model.request.CreateEventDTO;
-import com.aktic.indussahulatbackend.model.request.LocationDTO;
-import com.aktic.indussahulatbackend.model.request.NotificationRequestDTO;
-import com.aktic.indussahulatbackend.model.request.UpdateAssignmentDTO;
+import com.aktic.indussahulatbackend.model.request.*;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.EventHospitalAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
@@ -18,6 +15,7 @@ import com.aktic.indussahulatbackend.model.response.ResponseDTO;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.eventHospitalAssignment.EventHospitalAssignmentRepository;
+import com.aktic.indussahulatbackend.repository.hospital.HospitalRepository;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
@@ -58,6 +56,7 @@ public class IncidentEventService {
     private final NotificationService notificationService;
     private final SocketService socketService;
     private final RedisService redisService;
+    private final HospitalRepository hospitalRepository;
 
     @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(CreateEventDTO createEventDTO) {
@@ -651,4 +650,55 @@ public class IncidentEventService {
         return incidentEvent.getStatus() == EventStatus.CANCELLED
                 || incidentEvent.getStatus() == EventStatus.PATIENT_ADMITTED;
     }
+
+    @Transactional
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> updateHospitalPreference(Long eventId, UpdateHospitalPreferenceDTO updateHospitalPreferenceDTO) {
+        try {
+            // Fetch incident event
+            IncidentEvent incidentEvent = incidentEventRepository.findByIdAndStatusNotIn(eventId,
+                            List.of(EventStatus.PATIENT_ADMITTED, EventStatus.CANCELLED, EventStatus.PATIENT_PICKED))
+                    .orElseThrow(() -> new NoSuchElementException("Event not found"));
+
+            // Remove duplicate IDs from request
+            Set<Long> updatedHospitalIds = new HashSet<>(updateHospitalPreferenceDTO.getHospitalIds());
+
+            if (updatedHospitalIds.isEmpty()) {
+                // Optionally: allow clearing preferences OR throw error if needed
+                incidentEvent.setPatientPreferredHospitals(new ArrayList<>());
+                incidentEventRepository.save(incidentEvent);
+                return ResponseEntity.ok(
+                        new ApiResponse<>(true, "Hospital preferences cleared successfully", new IncidentEventDTO(incidentEvent))
+                );
+            }
+
+            // Fetch all hospitals based on the updated list
+            List<Hospital> updatedHospitals = hospitalRepository.findAllById(updatedHospitalIds);
+
+            if (updatedHospitals.isEmpty()) {
+                throw new NoSuchElementException("No valid hospitals found for provided IDs");
+            }
+
+            // Replace the current patient preferred hospitals with the new list
+            incidentEvent.setPatientPreferredHospitals(new ArrayList<>(updatedHospitals));
+
+            // Save the updated incident event
+            incidentEventRepository.save(incidentEvent);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, "Hospital preferences updated successfully", new IncidentEventDTO(incidentEvent))
+            );
+
+        } catch (NoSuchElementException e) {
+            log.error("Not found: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, e.getMessage(), null), HttpStatus.NOT_FOUND);
+        } catch (IllegalStateException e) {
+            log.error("Invalid event state: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, e.getMessage(), null), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error("Unexpected error: {}", e.getMessage());
+            return new ResponseEntity<>(new ApiResponse<>(false, "Error updating hospital preferences", null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 }

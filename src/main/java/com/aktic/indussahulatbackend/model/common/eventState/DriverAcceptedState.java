@@ -15,7 +15,7 @@ public class DriverAcceptedState implements EventState {
         if (!(event.getState() instanceof DriverAcceptedState)) {
             throw new IllegalStateException("Event is not in the correct state to move to the next state.");
         }
-        if (!(nextState instanceof DriverArrivedState)) {
+        if (!(nextState instanceof DriverArrivedState) && !(nextState instanceof HospitalAssignedState)) {
             throw new IllegalArgumentException("Invalid next state.");
         }
         event.setState(nextState);

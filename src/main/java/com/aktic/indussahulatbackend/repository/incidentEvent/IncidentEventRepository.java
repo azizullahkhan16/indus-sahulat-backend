@@ -20,4 +20,6 @@ public interface IncidentEventRepository extends JpaRepository<IncidentEvent, Lo
     Optional<IncidentEvent> findFirstByPatientAndStatusNotIn(Patient patient, List<EventStatus> list, Sort createdAt);
 
     Optional<IncidentEvent> findByIdAndStatus(Long eventId, EventStatus eventStatus);
+
+    Optional<IncidentEvent> findByIdAndStatusNotIn(Long eventId, List<EventStatus> patientAdmitted);
 }

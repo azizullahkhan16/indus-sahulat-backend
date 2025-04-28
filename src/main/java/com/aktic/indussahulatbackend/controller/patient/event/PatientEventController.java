@@ -3,6 +3,7 @@ package com.aktic.indussahulatbackend.controller.patient.event;
 import com.aktic.indussahulatbackend.model.entity.IncidentEvent;
 import com.aktic.indussahulatbackend.model.request.CreateEventDTO;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
+import com.aktic.indussahulatbackend.model.request.UpdateHospitalPreferenceDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.service.incidentEvent.IncidentEventService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
@@ -15,18 +16,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/patient")
 @RequiredArgsConstructor
-public class PatientEventController
-{
+public class PatientEventController {
 
-   private final IncidentEventService incidentEventService;
+    private final IncidentEventService incidentEventService;
 
     @PostMapping("/create-event")
     public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(
             @Valid @RequestBody CreateEventDTO createEventDTO
-            ) {
+    ) {
         return incidentEventService.createEvent(createEventDTO);
     }
 
@@ -35,10 +37,18 @@ public class PatientEventController
         return incidentEventService.getPatientActiveEvent();
     }
 
+    @PatchMapping("/hospital-preference/{eventId}")
+    public ResponseEntity<ApiResponse<IncidentEventDTO>> updateHospitalPreference(
+            @PathVariable Long eventId,
+            @Valid @RequestBody UpdateHospitalPreferenceDTO updateHospitalPreferenceDTO
+    ) {
+        return incidentEventService.updateHospitalPreference(eventId, updateHospitalPreferenceDTO);
+    }
+
     @PatchMapping("/cancel-event/{eventId}")
     public ResponseEntity<ApiResponse<IncidentEventDTO>> cancelEvent(
             @PathVariable Long eventId
-            ) {
+    ) {
         return incidentEventService.cancelEvent(eventId);
     }
 }

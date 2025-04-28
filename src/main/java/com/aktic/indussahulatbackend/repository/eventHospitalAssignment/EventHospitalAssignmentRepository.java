@@ -37,4 +37,6 @@ public interface EventHospitalAssignmentRepository extends JpaRepository<EventHo
     );
 
     Optional<EventHospitalAssignment> findByEventAndHospitalAndStatusIn(IncidentEvent event, Hospital hospital, List<RequestStatus> requested);
+
+    List<EventHospitalAssignment> findByEventAndHospitalIn(IncidentEvent event, List<Hospital> preferredHospitals);
 }

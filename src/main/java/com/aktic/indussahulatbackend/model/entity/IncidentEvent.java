@@ -13,6 +13,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -41,6 +42,14 @@ public class IncidentEvent {
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "hospital_assignment_id")
     private EventHospitalAssignment hospitalAssignment;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "incident_event_preferred_hospitals",
+            joinColumns = @JoinColumn(name = "incident_event_id"),
+            inverseJoinColumns = @JoinColumn(name = "hospital_id")
+    )
+    private List<Hospital> patientPreferredHospitals;
 
     @Embedded
     @AttributeOverrides({
