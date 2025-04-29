@@ -110,7 +110,7 @@ public class HospitalService {
             if (preferredHospitals != null && !preferredHospitals.isEmpty()) {
                 // Check if all preferred hospitals have their requests rejected
                 List<EventHospitalAssignment> preferredAssignments = eventHospitalAssignmentRepository.findByEventAndHospitalIn(event, preferredHospitals);
-                System.out.println(preferredAssignments);
+                
                 if (preferredAssignments.size() == preferredHospitals.size()) {
                     preferencesNullified = preferredAssignments.stream()
                             .allMatch(a -> a.getStatus() == RequestStatus.REJECTED);

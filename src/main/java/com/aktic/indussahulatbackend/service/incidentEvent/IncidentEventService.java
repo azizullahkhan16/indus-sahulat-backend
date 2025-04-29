@@ -425,6 +425,11 @@ public class IncidentEventService {
                         .body(new ApiResponse<>(false, "You are not authorized to update this assignment", null));
             }
 
+            if (incidentEvent.getHospitalAssignment() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "No hospital assignment found for this event", null));
+            }
+
             // Update the event status
             incidentEvent.nextState(new PatientPickedState());
             incidentEvent.setPickupTime(Instant.now());
