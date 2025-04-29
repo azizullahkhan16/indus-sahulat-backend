@@ -17,6 +17,7 @@ import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAss
 import com.aktic.indussahulatbackend.repository.ambulanceDriver.AmbulanceDriverRepository;
 import com.aktic.indussahulatbackend.repository.ambulanceProvider.AmbulanceProviderRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
+import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -44,16 +45,25 @@ public class AmbulanceAssignmentService {
     private final AmbulanceRepository ambulanceRepository;
     private final AmbulanceDriverRepository ambulanceDriverRepository;
     private final AuthService authService;
+    private final SocketService socketService;
 
     public ResponseEntity<ApiResponse<AmbulanceAssignmentDTO>> assignDriver(AmbulanceAssignmentRequest ambulanceAssignmentRequest) {
         try {
             AmbulanceProvider ambulanceProvider = (AmbulanceProvider) authService.getCurrentUser();
+
             Long providerId = ambulanceProvider.getId();
-            AmbulanceProvider provider = ambulanceProviderRepository.findById(providerId).orElseThrow(() -> new AmbulanceProviderNotFoundException(AmbulanceProviderNotFoundException.DEFAULT_MESSAGE));
+
+            AmbulanceProvider provider = ambulanceProviderRepository.findById(providerId)
+                    .orElseThrow(() -> new AmbulanceProviderNotFoundException(AmbulanceProviderNotFoundException.DEFAULT_MESSAGE));
+
             Long ambulanceId = ambulanceAssignmentRequest.getAmbulanceId();
-            Ambulance ambulance = ambulanceRepository.findById(ambulanceId).orElseThrow(() -> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
+            Ambulance ambulance = ambulanceRepository.findById(ambulanceId)
+                    .orElseThrow(() -> new AmbulanceNotFoundException(AmbulanceNotFoundException.DEFAULT_MESSAGE));
+
             Long driverId = ambulanceAssignmentRequest.getDriverId();
-            AmbulanceDriver driver = ambulanceDriverRepository.findById(driverId).orElseThrow(() -> new DriverNotFoundException(DriverNotFoundException.DEFAULT_MESSAGE));
+            AmbulanceDriver driver = ambulanceDriverRepository.findById(driverId)
+                    .orElseThrow(() -> new DriverNotFoundException(DriverNotFoundException.DEFAULT_MESSAGE));
+
             if (!ambulanceProvider.getCompany().getId().equals(driver.getCompany().getId()) || !ambulanceProvider.getCompany().getId().equals(ambulance.getCompany().getId())) {
                 throw new NoSuchElementException("Cannot assign since your company does not matches with the ambulance or drivers company.");
             }
@@ -73,6 +83,8 @@ public class AmbulanceAssignmentService {
             ambulanceAssignment = ambulanceAssignmentRepository.save(ambulanceAssignment);
 
             AmbulanceAssignmentDTO ambulanceAssignmentDTO = new AmbulanceAssignmentDTO(ambulanceAssignment);
+
+            socketService.sendNewAmbulanceAssignmentToDriver(ambulanceAssignmentDTO);
 
             return new ResponseEntity<>(new ApiResponse<>(true, "Ambulance Driver assigned successfully", ambulanceAssignmentDTO), HttpStatus.OK);  //Returning null cause cant return the ambulanceAssignment obj due to lazy.
         } catch (NoSuchElementException e) {

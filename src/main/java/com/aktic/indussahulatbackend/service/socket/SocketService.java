@@ -8,6 +8,7 @@ import com.aktic.indussahulatbackend.model.entity.Notification;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.redis.RedisEventLiveLocation;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
+import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.repository.redis.RedisEventLiveLocationRepository;
@@ -92,6 +93,15 @@ public class SocketService {
             messagingTemplate.convertAndSend(SocketEndpoint.NEW_ADMIT_REQUEST.getPath(), admitRequest);
         } catch (Exception e) {
             log.error("Error sending new admit request: {}", e.getMessage(), e);
+        }
+    }
+
+    public void sendNewAmbulanceAssignmentToDriver(AmbulanceAssignmentDTO ambulanceAssignmentDTO) {
+        try {
+            log.info("Sending new ambulance assignment to driver: {}", ambulanceAssignmentDTO);
+            messagingTemplate.convertAndSend(SocketEndpoint.AMBULANCE_ASSIGNMENT_TO_DRIVER.getPath() + ambulanceAssignmentDTO.getAmbulanceDriver().getId(), ambulanceAssignmentDTO);
+        } catch (Exception e) {
+            log.error("Error sending new ambulance assignment to driver: {}", e.getMessage(), e);
         }
     }
 
