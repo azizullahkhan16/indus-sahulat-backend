@@ -598,11 +598,12 @@ public class IncidentEventService {
             }
 
             Optional<EventAmbulanceAssignment> eventAssignmentOpt =
-                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatus(
-                            ambulanceAssignment, RequestStatus.ACCEPTED);
-            if (eventAssignmentOpt.isEmpty()
-                    || eventAssignmentOpt.get().getEvent().getStatus() == EventStatus.CANCELLED
-                    || eventAssignmentOpt.get().getEvent().getStatus() == EventStatus.PATIENT_ADMITTED) {
+                    eventAmbulanceAssignmentRepository.findByAmbulanceAssignmentAndStatusInAndEventStatusNotIn(
+                            ambulanceAssignment,
+                            List.of(RequestStatus.ACCEPTED),
+                            List.of(EventStatus.PATIENT_ADMITTED, EventStatus.CANCELLED));
+
+            if (eventAssignmentOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ApiResponse<>(false, "No active event assigned to this ambulance", null));
             }
