@@ -1,7 +1,7 @@
 package com.aktic.indussahulatbackend.model.entity;
 
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
-import com.aktic.indussahulatbackend.model.enums.ReceiverType;
+import com.aktic.indussahulatbackend.model.enums.NotificationReceiverType;
 import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -35,7 +35,7 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "receiver_type", nullable = false)
-    private ReceiverType receiverType;
+    private NotificationReceiverType receiverType;
 
     @Column(columnDefinition = "TEXT", name = "payload")
     @Convert(converter = JsonObjectConverter.class)

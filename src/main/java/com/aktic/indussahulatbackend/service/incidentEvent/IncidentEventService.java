@@ -5,7 +5,7 @@ import com.aktic.indussahulatbackend.model.common.eventState.*;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
-import com.aktic.indussahulatbackend.model.enums.ReceiverType;
+import com.aktic.indussahulatbackend.model.enums.NotificationReceiverType;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.*;
 import com.aktic.indussahulatbackend.model.response.EventAmbulanceAssignmentDTO;
@@ -13,17 +13,18 @@ import com.aktic.indussahulatbackend.model.response.EventHospitalAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
 import com.aktic.indussahulatbackend.model.response.ResponseDTO;
 import com.aktic.indussahulatbackend.repository.ambulanceAssignment.AmbulanceAssignmentRepository;
+import com.aktic.indussahulatbackend.repository.chatroom.ChatroomRepository;
 import com.aktic.indussahulatbackend.repository.eventAmbulanceAssignment.EventAmbulanceAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.eventHospitalAssignment.EventHospitalAssignmentRepository;
 import com.aktic.indussahulatbackend.repository.hospital.HospitalRepository;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.repository.response.ResponseRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
+import com.aktic.indussahulatbackend.service.chat.ChatService;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.service.redis.RedisService;
 import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
-import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,7 @@ public class IncidentEventService {
     private final SocketService socketService;
     private final RedisService redisService;
     private final HospitalRepository hospitalRepository;
+    private final ChatService chatService;
 
     @Transactional
     public ResponseEntity<ApiResponse<IncidentEventDTO>> createEvent(CreateEventDTO createEventDTO) {
@@ -83,11 +85,11 @@ public class IncidentEventService {
                     .pickupLocation(new Location(createEventDTO.getLocation().getLatitude(),
                             createEventDTO.getLocation().getLongitude()))
                     .pickupAddress(createEventDTO.getAddress())
+                    .status(EventStatus.CREATED)
                     .build();
-
             IncidentEvent incidentEvent = incidentEventRepository.save(event);
-            System.out.println(incidentEvent);
 
+            chatService.createChatroomForEvent(incidentEvent);
             return new ResponseEntity<>(new ApiResponse<>(true, "Event created successfully", new IncidentEventDTO(incidentEvent)), HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("Error creating event: {}", e.getMessage());
@@ -212,6 +214,8 @@ public class IncidentEventService {
                 eventAssignment.getEvent().nextState(new DriverAcceptedState());
                 eventAssignment.getEvent().setAmbulanceAssignment(eventAssignment);
                 eventAssignment.getEvent().setAmbulanceProvider(eventAssignment.getAmbulanceProvider());
+
+                eventAssignment.getEvent().getChatroom().setAmbulanceDriver(ambulanceDriver);
             } else if (updateAssignmentDTO.getStatus().equals(RequestStatus.REJECTED.name())) {
                 eventAssignment.getEvent().nextState(new QuestionnaireFilledState());
             }
@@ -224,7 +228,7 @@ public class IncidentEventService {
 
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(updatedEventAssignment.getAmbulanceProvider().getId())
-                    .receiverType(ReceiverType.AMBULANCE_PROVIDER)
+                    .receiverType(NotificationReceiverType.AMBULANCE_PROVIDER)
                     .payload(new EventAmbulanceAssignmentDTO(updatedEventAssignment))
                     .notificationType(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())
                             ? NotificationType.EVENT_AMBULANCE_ASSIGN_ACCEPT
@@ -371,6 +375,8 @@ public class IncidentEventService {
                 eventAssignment.getEvent().nextState(new HospitalAssignedState());
                 eventAssignment.getEvent().setHospitalAssignment(eventAssignment);
                 eventAssignment.getEvent().setDropOffLocation(eventAssignment.getHospital().getAddress());
+
+                eventAssignment.getEvent().getChatroom().setHospitalAdmin((HospitalAdmin) authService.getCurrentUser());
             }
 
             redisService.deleteEventHospitalAssignment(eventHospitalAssignmentId);
@@ -379,7 +385,7 @@ public class IncidentEventService {
 
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(updatedEventAssignment.getEvent().getAmbulanceAssignment().getAmbulanceAssignment().getAmbulanceDriver().getId())
-                    .receiverType(ReceiverType.AMBULANCE_DRIVER)
+                    .receiverType(NotificationReceiverType.AMBULANCE_DRIVER)
                     .payload(new EventHospitalAssignmentDTO(updatedEventAssignment))
                     .notificationType(updateAssignmentDTO.getStatus().equals(RequestStatus.ACCEPTED.name())
                             ? NotificationType.EVENT_HOSPITAL_ASSIGN_ACCEPT
@@ -478,6 +484,8 @@ public class IncidentEventService {
 
             incidentEvent.setLiveLocation(redisService.getEventLiveLocation(eventId));
 
+            incidentEvent.getChatroom().setIsActive(false);
+
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
             redisService.deleteEventLiveLocation(eventId);
@@ -560,6 +568,9 @@ public class IncidentEventService {
 
             // Update the event status
             incidentEvent.cancelEvent();
+
+            incidentEvent.getChatroom().setIsActive(false);
+
             IncidentEvent updatedEvent = incidentEventRepository.save(incidentEvent);
 
             redisService.deleteEventLiveLocation(eventId);

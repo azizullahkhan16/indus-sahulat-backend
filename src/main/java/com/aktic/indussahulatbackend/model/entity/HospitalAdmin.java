@@ -27,7 +27,7 @@ public class HospitalAdmin implements UserBase {
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hospital_id", nullable = false, updatable = false)
     private Hospital hospital;
 

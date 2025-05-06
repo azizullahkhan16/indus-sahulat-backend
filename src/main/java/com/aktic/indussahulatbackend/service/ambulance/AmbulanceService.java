@@ -5,7 +5,7 @@ import com.aktic.indussahulatbackend.model.common.eventState.AmbulanceAssignedSt
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
-import com.aktic.indussahulatbackend.model.enums.ReceiverType;
+import com.aktic.indussahulatbackend.model.enums.NotificationReceiverType;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.AssignEventAmbulanceDTO;
 import com.aktic.indussahulatbackend.model.request.NotificationRequestDTO;
@@ -24,7 +24,6 @@ import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.service.redis.RedisService;
 import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
-import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -311,7 +310,7 @@ public class AmbulanceService {
 
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(ambulanceAssignment.getAmbulanceDriver().getId())
-                    .receiverType(ReceiverType.AMBULANCE_DRIVER)
+                    .receiverType(NotificationReceiverType.AMBULANCE_DRIVER)
                     .payload(eventAmbulanceResponse)
                     .notificationType(NotificationType.EVENT_AMBULANCE_ASSIGN_REQUEST)
                     .build();

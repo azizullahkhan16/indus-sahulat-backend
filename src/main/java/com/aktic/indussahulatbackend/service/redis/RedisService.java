@@ -5,7 +5,7 @@ import com.aktic.indussahulatbackend.model.entity.EventAmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.entity.EventHospitalAssignment;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
-import com.aktic.indussahulatbackend.model.enums.ReceiverType;
+import com.aktic.indussahulatbackend.model.enums.NotificationReceiverType;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.redis.RedisEventAmbulanceAssignment;
 import com.aktic.indussahulatbackend.model.redis.RedisEventHospitalAssignment;
@@ -21,7 +21,6 @@ import com.aktic.indussahulatbackend.repository.redis.RedisEventHospitalAssignme
 import com.aktic.indussahulatbackend.repository.redis.RedisEventLiveLocationRepository;
 import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.service.socket.SocketService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -164,7 +163,7 @@ public class RedisService {
 
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(assignment.getAmbulanceProvider().getId())
-                    .receiverType(ReceiverType.AMBULANCE_PROVIDER)
+                    .receiverType(NotificationReceiverType.AMBULANCE_PROVIDER)
                     .payload(new EventAmbulanceAssignmentDTO(assignment))
                     .notificationType(NotificationType.EVENT_AMBULANCE_ASSIGN_EXPIRED)
                     .build();
@@ -196,7 +195,7 @@ public class RedisService {
 
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(assignment.getEvent().getAmbulanceAssignment().getAmbulanceAssignment().getAmbulanceDriver().getId())
-                    .receiverType(ReceiverType.AMBULANCE_DRIVER)
+                    .receiverType(NotificationReceiverType.AMBULANCE_DRIVER)
                     .payload(new EventHospitalAssignmentDTO(assignment))
                     .notificationType(NotificationType.EVENT_HOSPITAL_ASSIGN_EXPIRED)
                     .build();

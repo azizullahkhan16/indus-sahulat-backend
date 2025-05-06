@@ -24,15 +24,15 @@ public class EventAmbulanceAssignment {
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ambulance_assignment_id", nullable = false, updatable = false)
     private AmbulanceAssignment ambulanceAssignment;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ambulance_provider_id", nullable = false)
     private AmbulanceProvider ambulanceProvider;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false, updatable = false)
     private IncidentEvent event;
 
@@ -49,9 +49,8 @@ public class EventAmbulanceAssignment {
     private Instant updatedAt;
 
     @PrePersist
-    protected void onCreate() {
-        if (status == null)
-        {
+    private void onCreate() {
+        if (status == null) {
             this.status = RequestStatus.REQUESTED;
         }
     }

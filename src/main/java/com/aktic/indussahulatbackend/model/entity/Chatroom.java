@@ -1,6 +1,5 @@
 package com.aktic.indussahulatbackend.model.entity;
 
-import com.aktic.indussahulatbackend.model.common.Location;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,35 +15,32 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "ambulance_assignments")
+@Table(name = "chatrooms")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class AmbulanceAssignment {
+public class Chatroom {
     @Id
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_provider_id", nullable = false, updatable = false)
-    private AmbulanceProvider ambulanceProvider;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id", nullable = false, updatable = false, unique = true)
+    private IncidentEvent event;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_id", nullable = false, updatable = false)
-    private Ambulance ambulance;
+    @JoinColumn(name = "patient_id")
+    private Patient patient;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ambulance_driver_id", nullable = false, updatable = false)
+    @JoinColumn(name = "driver_id")
     private AmbulanceDriver ambulanceDriver;
 
-    @Column(name = "is_active")
-    private Boolean isActive;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hospital_admin_id")
+    private HospitalAdmin hospitalAdmin;
 
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "latitude", column = @Column(name = "driver_latitude")),
-            @AttributeOverride(name = "longitude", column = @Column(name = "driver_longitude"))
-    })
-    private Location driverLocation;
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
@@ -53,4 +49,11 @@ public class AmbulanceAssignment {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @PrePersist
+    private void onCreate() {
+        if (this.isActive == null) {
+            this.isActive = true;
+        }
+    }
 }

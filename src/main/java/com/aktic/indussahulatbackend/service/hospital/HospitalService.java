@@ -3,7 +3,7 @@ package com.aktic.indussahulatbackend.service.hospital;
 import com.aktic.indussahulatbackend.model.entity.*;
 import com.aktic.indussahulatbackend.model.enums.EventStatus;
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
-import com.aktic.indussahulatbackend.model.enums.ReceiverType;
+import com.aktic.indussahulatbackend.model.enums.NotificationReceiverType;
 import com.aktic.indussahulatbackend.model.enums.RequestStatus;
 import com.aktic.indussahulatbackend.model.request.NotificationRequestDTO;
 import com.aktic.indussahulatbackend.model.request.SendAdmitRequestDTO;
@@ -17,7 +17,6 @@ import com.aktic.indussahulatbackend.service.notification.NotificationService;
 import com.aktic.indussahulatbackend.service.redis.RedisService;
 import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
-import com.aktic.indussahulatbackend.util.JsonObjectConverter;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -110,7 +109,7 @@ public class HospitalService {
             if (preferredHospitals != null && !preferredHospitals.isEmpty()) {
                 // Check if all preferred hospitals have their requests rejected
                 List<EventHospitalAssignment> preferredAssignments = eventHospitalAssignmentRepository.findByEventAndHospitalIn(event, preferredHospitals);
-                
+
                 if (preferredAssignments.size() == preferredHospitals.size()) {
                     preferencesNullified = preferredAssignments.stream()
                             .allMatch(a -> a.getStatus() == RequestStatus.REJECTED);
@@ -154,7 +153,7 @@ public class HospitalService {
             // Notify hospital admin
             NotificationRequestDTO notificationRequestDTO = NotificationRequestDTO.builder()
                     .receiverId(eventHospitalAssignment.getHospital().getId())
-                    .receiverType(ReceiverType.HOSPITAL_ADMIN)
+                    .receiverType(NotificationReceiverType.HOSPITAL_ADMIN)
                     .notificationType(NotificationType.EVENT_HOSPITAL_ASSIGN_REQUEST)
                     .payload(eventHospitalAssignmentDTO)
                     .build();

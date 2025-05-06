@@ -27,21 +27,24 @@ public class IncidentEvent {
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false, updatable = false)
     private Patient patient;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ambulance_provider_id")
     private AmbulanceProvider ambulanceProvider;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ambulance_assignment_id")
     private EventAmbulanceAssignment ambulanceAssignment;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hospital_assignment_id")
     private EventHospitalAssignment hospitalAssignment;
+
+    @OneToOne(mappedBy = "event")
+    private Chatroom chatroom;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

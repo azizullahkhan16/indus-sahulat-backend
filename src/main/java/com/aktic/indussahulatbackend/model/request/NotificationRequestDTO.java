@@ -1,10 +1,8 @@
 package com.aktic.indussahulatbackend.model.request;
 
 import com.aktic.indussahulatbackend.model.enums.NotificationType;
-import com.aktic.indussahulatbackend.model.enums.ReceiverType;
+import com.aktic.indussahulatbackend.model.enums.NotificationReceiverType;
 import lombok.*;
-
-import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -12,7 +10,7 @@ import java.util.Map;
 @Builder
 public class NotificationRequestDTO {
     private Long receiverId;
-    private ReceiverType receiverType;
+    private NotificationReceiverType receiverType;
     private Object payload;
     private NotificationType notificationType;
 

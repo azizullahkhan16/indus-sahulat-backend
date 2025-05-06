@@ -1,6 +1,6 @@
 package com.aktic.indussahulatbackend.model.entity;
 
-import com.aktic.indussahulatbackend.model.enums.RequestStatus;
+import com.aktic.indussahulatbackend.model.enums.MessageSenderType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,25 +16,27 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "event_hospital_assignments")
+@Table(name = "messages")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class EventHospitalAssignment {
+public class Message {
     @Id
     @Column(name = "id", nullable = false, updatable = false, unique = true)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hospital_id", nullable = false, updatable = false)
-    private Hospital hospital;
+    @JoinColumn(name = "chatroom_id", nullable = false, updatable = false)
+    private Chatroom chatroom;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false, updatable = false)
-    private IncidentEvent event;
+    @Column(name = "sender_id", nullable = false)
+    private Long senderId;
 
-    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    private RequestStatus status;
+    @Column(name = "sender_type", nullable = false)
+    private MessageSenderType senderType;
+
+    @Column(name = "message", nullable = false)
+    private String message;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
@@ -43,11 +45,4 @@ public class EventHospitalAssignment {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    @PrePersist
-    private void onCreate() {
-        if (status == null) {
-            this.status = RequestStatus.REQUESTED;
-        }
-    }
 }
