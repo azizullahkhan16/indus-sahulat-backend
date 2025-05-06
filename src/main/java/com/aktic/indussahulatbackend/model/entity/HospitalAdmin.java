@@ -19,7 +19,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "hospital-admins")
+@Table(name = "hospital_admins")
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 public class HospitalAdmin implements UserBase {
