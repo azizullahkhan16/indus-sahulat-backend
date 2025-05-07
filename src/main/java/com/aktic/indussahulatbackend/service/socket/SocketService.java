@@ -10,6 +10,7 @@ import com.aktic.indussahulatbackend.model.redis.RedisEventLiveLocation;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
 import com.aktic.indussahulatbackend.model.response.AmbulanceAssignmentDTO;
 import com.aktic.indussahulatbackend.model.response.IncidentEventDTO;
+import com.aktic.indussahulatbackend.model.response.MessageDTO;
 import com.aktic.indussahulatbackend.repository.incidentEvent.IncidentEventRepository;
 import com.aktic.indussahulatbackend.repository.redis.RedisEventLiveLocationRepository;
 import com.aktic.indussahulatbackend.service.redis.RedisService;
@@ -102,6 +103,15 @@ public class SocketService {
             messagingTemplate.convertAndSend(SocketEndpoint.AMBULANCE_ASSIGNMENT_TO_DRIVER.getPath() + ambulanceAssignmentDTO.getAmbulanceDriver().getId(), ambulanceAssignmentDTO);
         } catch (Exception e) {
             log.error("Error sending new ambulance assignment to driver: {}", e.getMessage(), e);
+        }
+    }
+
+    public void sendNewMessageToChatroom(MessageDTO messageDTO) {
+        try {
+            log.info("Sending new message to chatroom: {}", messageDTO.getChatroomId());
+            messagingTemplate.convertAndSend(SocketEndpoint.SEND_MESSAGE_TO_CHATROOM.getPath() + messageDTO.getChatroomId(), messageDTO);
+        } catch (Exception e) {
+            log.error("Error sending new message to chatroom: {}", e.getMessage(), e);
         }
     }
 

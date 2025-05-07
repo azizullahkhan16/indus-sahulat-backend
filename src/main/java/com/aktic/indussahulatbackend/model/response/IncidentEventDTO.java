@@ -1,6 +1,7 @@
 package com.aktic.indussahulatbackend.model.response;
 
 import com.aktic.indussahulatbackend.model.common.Location;
+import com.aktic.indussahulatbackend.model.entity.Chatroom;
 import com.aktic.indussahulatbackend.model.entity.EventHospitalAssignment;
 import com.aktic.indussahulatbackend.model.entity.IncidentEvent;
 import com.aktic.indussahulatbackend.model.request.LocationDTO;
@@ -44,6 +45,32 @@ public class IncidentEventDTO {
         this.eventAmbulanceAssignment = incidentEvent.getAmbulanceAssignment() != null ? new EventAmbulanceAssignmentDTO(incidentEvent.getAmbulanceAssignment()) : null;
         this.eventHospitalAssignment = incidentEvent.getHospitalAssignment() != null ? new EventHospitalAssignmentDTO(incidentEvent.getHospitalAssignment()) : null;
         this.chatroom = incidentEvent.getChatroom() != null ? new ChatroomDTO(incidentEvent.getChatroom()) : null;
+        this.pickupLocation = incidentEvent.getPickupLocation();
+        this.pickupAddress = incidentEvent.getPickupAddress();
+        this.dropoffLocation = incidentEvent.getDropOffLocation();
+        this.status = incidentEvent.getStatus().name();
+        this.pickupTime = incidentEvent.getPickupTime();
+        this.dropOffTime = incidentEvent.getDropOffTime();
+        this.liveLocation = incidentEvent.getLiveLocation();
+
+        // Fix for patientPreferredHospital (convert list)
+        this.patientPreferredHospitals = incidentEvent.getPatientPreferredHospitals() != null
+                ? incidentEvent.getPatientPreferredHospitals().stream()
+                .map(HospitalDTO::new)
+                .collect(Collectors.toList())
+                : null;
+
+        this.createdAt = incidentEvent.getCreatedAt();
+        this.updatedAt = incidentEvent.getUpdatedAt();
+    }
+
+    public IncidentEventDTO(IncidentEvent incidentEvent, Chatroom chatroom) {
+        this.id = incidentEvent.getId();
+        this.patient = new PatientDTO(incidentEvent.getPatient());
+        this.ambulanceProvider = incidentEvent.getAmbulanceProvider() != null ? new AmbulanceProviderDTO(incidentEvent.getAmbulanceProvider()) : null;
+        this.eventAmbulanceAssignment = incidentEvent.getAmbulanceAssignment() != null ? new EventAmbulanceAssignmentDTO(incidentEvent.getAmbulanceAssignment()) : null;
+        this.eventHospitalAssignment = incidentEvent.getHospitalAssignment() != null ? new EventHospitalAssignmentDTO(incidentEvent.getHospitalAssignment()) : null;
+        this.chatroom = new ChatroomDTO(chatroom);
         this.pickupLocation = incidentEvent.getPickupLocation();
         this.pickupAddress = incidentEvent.getPickupAddress();
         this.dropoffLocation = incidentEvent.getDropOffLocation();

@@ -6,7 +6,8 @@ public enum SocketEndpoint {
     INCIDENT_EVENT_LIVE_LOCATION("/user/event/live-location/"),
     NEW_ADMIT_REQUEST("/topic/hospital/admit-request/"),
     USER_NOTIFICATION("/user/notification/"),
-    AMBULANCE_ASSIGNMENT_TO_DRIVER("/user/assignment/");
+    AMBULANCE_ASSIGNMENT_TO_DRIVER("/user/assignment/"),
+    SEND_MESSAGE_TO_CHATROOM("/topic/event/chatroom/");
 
     private final String path;
 

@@ -10,6 +10,7 @@ import com.aktic.indussahulatbackend.model.response.MessageDTO;
 import com.aktic.indussahulatbackend.repository.chatroom.ChatroomRepository;
 import com.aktic.indussahulatbackend.repository.message.MessageRepository;
 import com.aktic.indussahulatbackend.service.auth.AuthService;
+import com.aktic.indussahulatbackend.service.socket.SocketService;
 import com.aktic.indussahulatbackend.util.ApiResponse;
 import com.aktic.indussahulatbackend.util.SnowflakeIdGenerator;
 import jakarta.validation.Valid;
@@ -33,6 +34,7 @@ public class ChatService {
     private final SnowflakeIdGenerator idGenerator;
     private final AuthService authService;
     private final MessageRepository messageRepository;
+    private final SocketService socketService;
 
     public Chatroom createChatroomForEvent(IncidentEvent event) {
         try {
@@ -88,7 +90,11 @@ public class ChatService {
 
             message = messageRepository.save(message);
 
-            return new ResponseEntity<>(new ApiResponse<>(true, "Message added successfully", new MessageDTO(message, sender)), HttpStatus.CREATED);
+            MessageDTO messageDTO = new MessageDTO(message, sender);
+
+            socketService.sendNewMessageToChatroom(messageDTO);
+
+            return new ResponseEntity<>(new ApiResponse<>(true, "Message added successfully", messageDTO), HttpStatus.CREATED);
         } catch (RuntimeException e) {
             log.error("Error adding message: {}", e.getMessage(), e);
             return new ResponseEntity<>(new ApiResponse<>(false, "Chatroom has been deactivated!", null), HttpStatus.BAD_REQUEST);

@@ -87,10 +87,12 @@ public class IncidentEventService {
                     .pickupAddress(createEventDTO.getAddress())
                     .status(EventStatus.CREATED)
                     .build();
-            IncidentEvent incidentEvent = incidentEventRepository.save(event);
 
-            chatService.createChatroomForEvent(incidentEvent);
-            return new ResponseEntity<>(new ApiResponse<>(true, "Event created successfully", new IncidentEventDTO(incidentEvent)), HttpStatus.CREATED);
+            event = incidentEventRepository.save(event);
+
+            Chatroom chatroom = chatService.createChatroomForEvent(event);
+
+            return new ResponseEntity<>(new ApiResponse<>(true, "Event created successfully", new IncidentEventDTO(event, chatroom)), HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("Error creating event: {}", e.getMessage());
             return new ResponseEntity<>(new ApiResponse<>(false, "Error creating event", null), HttpStatus.INTERNAL_SERVER_ERROR);
