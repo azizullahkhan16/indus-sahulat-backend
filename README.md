@@ -281,7 +281,7 @@ Real-time updates are available via WebSocket connections:
 
 ### System Architecture
 
-The application follows a layered architecture pattern:
+The application follows a clean architecture pattern:
 
 ```
 ┌─────────────────────────────────────┐
