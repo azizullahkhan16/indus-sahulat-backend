@@ -1,4 +1,4 @@
-# Indus Sahulat - Emergency Ambulance Service Management System
+# Indus Sahulat - Emergency Healthcare Response System
 
 A comprehensive ambulance service management system backend for Indus Hospital, designed to coordinate emergency medical
 services between patients, ambulance providers, drivers, and hospitals.
