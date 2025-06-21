@@ -1,4 +1,4 @@
-# Indus Sahulat Backend
+# Indus Sahulat - Emergency Ambulance Service Management System
 
 A comprehensive ambulance service management system backend for Indus Hospital, designed to coordinate emergency medical
 services between patients, ambulance providers, drivers, and hospitals.
@@ -20,7 +20,7 @@ services between patients, ambulance providers, drivers, and hospitals.
 
 ## Introduction
 
-Indus Sahulat Backend is a Spring Boot-based REST API that powers an emergency ambulance service coordination platform.
+Indus Sahulat is a Spring Boot-based REST API that powers an emergency ambulance service coordination platform.
 The system facilitates real-time communication and coordination between patients in need of emergency medical transport,
 ambulance service providers, drivers, and receiving hospitals.
 
@@ -208,7 +208,7 @@ The application will start on `http://localhost:8080`
 ### Environment Variables
 
 | Variable            | Description                         | Default           |
-|---------------------|-------------------------------------|-------------------|
+| ------------------- | ----------------------------------- | ----------------- |
 | `JWT_SECRET_KEY`    | Secret key for JWT token generation | Required          |
 | `SUPABASE_PASSWORD` | Database password for production    | Required for prod |
 
