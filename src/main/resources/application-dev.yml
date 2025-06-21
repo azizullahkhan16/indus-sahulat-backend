@@ -4,7 +4,6 @@ spring:
   jackson:
     time-zone: UTC
   datasource:
-    #    url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?user=postgres.uwmfmhuiarguikbxpweh&password=${SUPABASE_PASSWORD}
     url: jdbc:postgresql://localhost:5432/IndusSahulat
     username: postgres
     password: 123456789
